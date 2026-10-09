@@ -1,0 +1,24 @@
+{
+  "name": "ss40-smart-attendance",
+  "version": "1.0.0",
+  "description": "Production-Ready Smart Attendance Web Application for SS40 Network Private Limited",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "attendance",
+    "geofencing",
+    "barcode-scanner",
+    "ss40network"
+  ],
+  "author": "SS40 Network Private Limited",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "html5-qrcode": "^2.3.8",
+    "jsbarcode": "^3.12.3"
+  }
+}

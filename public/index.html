@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SS40 NETWORK — Smart Attendance System</title>
+  <meta name="description" content="Production-Grade Smart Attendance Management System with Strict Geofencing and Dual Barcode Scanning for SS40 Network Private Limited." />
+  
+  <!-- Favicon & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Vendor Libraries -->
+  <script src="/vendor/jsbarcode.min.js"></script>
+  <script src="/vendor/html5-qrcode.min.js"></script>
+
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- =========================================================================
+       CORPORATE HEADER & TOP NAVIGATION
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="header-container">
+      
+      <!-- Brand & Office Indicator -->
+      <div class="brand-wrapper">
+        <div class="ss40-logo-badge" title="SS40 Network Private Limited">SS40</div>
+        <div class="brand-text">
+          <h1>SS40 <span class="brand-accent">NETWORK</span></h1>
+          <div class="brand-tagline">
+            <span class="office-dot"></span>
+            <span>Tirunelveli Incubation Centre HQ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Portal View Switcher -->
+      <nav class="nav-pills" aria-label="Portal Navigation">
+        <button id="nav-kiosk-btn" class="nav-pill-btn active" title="Fast Barcode Check-in Terminal">
+          <span>⚡</span>
+          <span>Employee Check-in</span>
+        </button>
+        <button id="nav-admin-btn" class="nav-pill-btn" title="Management & Analytics Dashboard">
+          <span>🛡</span>
+          <span>Admin Control Center</span>
+        </button>
+      </nav>
+
+      <!-- Right: Geofence Radar Status & Clock -->
+      <div class="header-right">
+        
+        <!-- Live Geofence Radar Badge -->
+        <div id="geofence-live-badge" class="geofence-live-badge inside" title="Strict Location Lock Status">
+          <div class="pulse-radar-dot"></div>
+          <span id="geofence-dist-text">Calculating GPS...</span>
+        </div>
+
+        <!-- Live Clock -->
+        <div class="header-clock">
+          <div id="live-clock">00:00:00 AM</div>
+          <div id="live-date" class="header-clock-date">Mon, Oct 09, 2026</div>
+        </div>
+
+        <!-- Quick Controls -->
+        <button id="audio-toggle-btn" class="header-action-btn" title="Toggle Audio Chimes">🔊</button>
+        <button id="fullscreen-btn" class="header-action-btn" title="Toggle Fullscreen Kiosk Mode">⛶</button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN WORKSPACE
+       ========================================================================= -->
+  <main class="app-main">
+
+    <!-- =======================================================================
+         VIEW 1: EMPLOYEE FAST CHECK-IN PORTAL / KIOSK
+         ======================================================================= -->
+    <section id="view-kiosk" class="view-section active">
+      <div class="kiosk-grid">
+
+        <!-- Left Column: Dual Scanning Terminal Card -->
+        <div class="scanner-terminal-card">
+          
+          <div class="terminal-header">
+            <div class="terminal-title">
+              <h2><span>🪪</span> Attendance Verification Terminal</h2>
+              <p>Scan your company ID card barcode to record Check-In or Check-Out</p>
+            </div>
+            
+            <div class="scan-mode-tabs">
+              <button id="mode-camera-btn" class="scan-mode-tab active" title="Use Camera Scanner">
+                <span>📷</span> Mobile / Cam
+              </button>
+              <button id="mode-usb-btn" class="scan-mode-tab" title="Use External Barcode Gun">
+                <span>🔌</span> USB Gun
+              </button>
+            </div>
+          </div>
+
+          <!-- Camera Viewport Container -->
+          <div id="camera-viewport-wrap" class="camera-viewport-container">
+            <div id="camera-preview"></div>
+
+            <!-- Aim Frame & Holographic Laser Animation -->
+            <div class="scan-aim-overlay">
+              <div class="aim-frame">
+                <div class="aim-corner aim-tl"></div>
+                <div class="aim-corner aim-tr"></div>
+                <div class="aim-corner aim-bl"></div>
+                <div class="aim-corner aim-br"></div>
+                <div class="laser-line"></div>
+              </div>
+              <div class="aim-caption">ALIGN COMPANY BARCODE WITHIN FRAME</div>
+            </div>
+
+            <!-- Camera Controls -->
+            <div class="camera-controls-bar">
+              <button id="switch-camera-btn" class="cam-ctrl-btn" title="Switch Camera (Front/Rear)">🔄</button>
+            </div>
+          </div>
+
+          <!-- USB Hardware Scanner View (Alternative View) -->
+          <div id="usb-scanner-view" class="usb-scanner-view">
+            <div class="usb-icon-halo">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>USB / Bluetooth Barcode Gun Ready</h3>
+              <p>Aim your external handheld barcode scanner at the ID badge and pull the trigger.</p>
+            </div>
+            <div class="hardware-input-wrapper">
+              <input type="text" id="hardware-barcode-input" placeholder="Awaiting hardware scanner input..." autofocus autocomplete="off" />
+              <button id="hardware-submit-btn" class="hardware-input-btn" title="Submit Barcode">➔</button>
+            </div>
+          </div>
+
+          <!-- Terminal Footer: Manual Fallback & Simulation Switcher -->
+          <div class="terminal-footer">
+            <div class="kiosk-status-pill">
+              <span class="indicator-dot"></span>
+              <span>Geofence Guard Active</span>
+            </div>
+
+            <!-- Simulation Quick Switcher Bar (For testing & evaluation) -->
+            <div class="demo-sim-bar" title="Test different GPS scenarios">
+              <span style="color:var(--text-muted); font-weight:700;">Simulate:</span>
+              <button class="demo-sim-btn active" data-mode="FORCE_INSIDE">Inside Office (24m)</button>
+              <button class="demo-sim-btn" data-mode="FORCE_OUTSIDE">Outside Office (485m)</button>
+              <button class="demo-sim-btn" data-mode="REAL_GPS">Live Device GPS</button>
+            </div>
+
+            <!-- Manual Barcode Fallback -->
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+              <input type="text" id="manual-barcode-input" placeholder="Manual ID (e.g. SS40-EMP-1001)" class="form-control" style="width:200px; padding:0.4rem 0.6rem; font-size:0.78rem;" />
+              <button id="manual-submit-btn" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.78rem;">Submit</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Location Perimeter & Quick-Test Employee Shelf -->
+        <div class="kiosk-sidebar">
+
+          <!-- Geofence Perimeter Card -->
+          <div class="geofence-card">
+            <div class="geofence-card-header">
+              <div class="geofence-card-title">
+                <span>📍</span> SS40 Geofence Perimeter
+              </div>
+              <span class="status-badge on-time">Strict Lock</span>
+            </div>
+
+            <div class="geofence-meter-box">
+              <div class="meter-stat-row">
+                <span id="kiosk-meter-dist" class="meter-stat-value">24m</span>
+                <span class="meter-stat-target">Allowed Radius: 150m</span>
+              </div>
+              <div class="geofence-bar-track">
+                <div id="kiosk-meter-bar" class="geofence-bar-fill" style="width: 16%;"></div>
+              </div>
+            </div>
+
+            <div class="office-coords-list">
+              <div class="coords-row">
+                <span>Office Location:</span>
+                <span class="val">Sree Puram, Tirunelveli</span>
+              </div>
+              <div class="coords-row">
+                <span>Office Coordinates:</span>
+                <span class="val" id="kiosk-office-coords">8.72851, 77.72744 (±150m)</span>
+              </div>
+              <div class="coords-row">
+                <span>Shift Schedule:</span>
+                <span class="val">09:30 AM - 06:30 PM</span>
+              </div>
+              <div class="coords-row">
+                <span>Grace Window:</span>
+                <span class="val">15 Minutes (till 09:45 AM)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Test Employee Badges Shelf -->
+          <div class="quick-test-shelf-card">
+            <div class="shelf-header">
+              <h3><span>👥</span> Sample Employee Badges</h3>
+              <span style="font-size:0.7rem; color:var(--teal-700); font-weight:700;">1-Click Demo</span>
+            </div>
+            <div class="shelf-subtitle">Click any employee below to simulate an instant badge scan:</div>
+            
+            <div id="test-badges-grid" class="test-badges-grid">
+              <!-- Dynamically populated from employees list -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 2: ADMIN CONTROL CENTER & ANALYTICS DASHBOARD
+         ======================================================================= -->
+    <section id="view-admin" class="view-section">
+      
+      <!-- Admin Header Toolbar -->
+      <div class="admin-header-toolbar">
+        <div class="admin-title-block">
+          <h2>Administrative Control Center</h2>
+          <p>Real-time corporate oversight, employee identity credentials, and compliance reports</p>
+        </div>
+        <div class="admin-action-tools">
+          <button id="open-add-emp-btn" class="btn btn-primary">
+            <span>+</span> Add New Employee
+          </button>
+          <button id="export-csv-btn" class="btn btn-secondary">
+            <span>📥</span> Export CSV Report
+          </button>
+          <button id="admin-logout-btn" class="btn btn-outline">
+            <span>🔒</span> Logout Admin
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top-row">
+            <span class="kpi-title">Staff Registered</span>
+            <div class="kpi-icon-box teal">👥</div>
+          </div>
+          <div id="kpi-total-employees" class="kpi-main-number">8</div>
+          <div class="kpi-subtext">Across 3 business wings</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top-row">
+            <span class="kpi-title">Present Today</span>
+            <div class="kpi-icon-box emerald">✓</div>
+          </div>
+          <div id="kpi-present-today" class="kpi-main-number">8 (100%)</div>
+          <div class="kpi-subtext">Verified attendance logs</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top-row">
+            <span class="kpi-title">Currently Clocked In</span>
+            <div class="kpi-icon-box amber">⏱</div>
+          </div>
+          <div id="kpi-clocked-in" class="kpi-main-number">4</div>
+          <div class="kpi-subtext">Active on office floor</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top-row">
+            <span class="kpi-title">Punctuality Score</span>
+            <div class="kpi-icon-box teal">🎯</div>
+          </div>
+          <div id="kpi-punctuality-rate" class="kpi-main-number">94%</div>
+          <div class="kpi-subtext">On-time & grace rate</div>
+        </div>
+      </div>
+
+      <!-- Admin Sub-Navigation Tabs -->
+      <div class="admin-tabs-nav">
+        <button class="admin-tab-btn active" data-tab="feed">
+          <span>📡</span> Live Activity Feed
+        </button>
+        <button class="admin-tab-btn" data-tab="employees">
+          <span>👤</span> Employee Directory (CRUD)
+        </button>
+        <button class="admin-tab-btn" data-tab="logs">
+          <span>📋</span> Attendance Logs
+        </button>
+        <button class="admin-tab-btn" data-tab="heatmap">
+          <span>🔥</span> Monthly Heatmap & Streaks
+        </button>
+        <button class="admin-tab-btn" data-tab="idcard">
+          <span>🪪</span> Digital ID Badge Studio
+        </button>
+        <button class="admin-tab-btn" data-tab="settings">
+          <span>⚙</span> Geofence & Office Settings
+        </button>
+      </div>
+
+      <!-- TAB 1: LIVE ACTIVITY FEED -->
+      <div id="pane-feed" class="admin-tab-pane active">
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Today's Real-Time Attendance Stream</h3>
+              <p>Continuous verification feed with GPS validation and check-in timestamps</p>
+            </div>
+            <button class="btn btn-secondary" onclick="window.apiService.getTodayOverview().then(() => window.location.reload())" style="font-size:0.75rem;">
+              🔄 Refresh Stream
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Punch In</th>
+                  <th>Punch Out</th>
+                  <th>Hours Worked</th>
+                  <th>Status Flag</th>
+                  <th>Method</th>
+                  <th>Geofence Verification</th>
+                </tr>
+              </thead>
+              <tbody id="live-feed-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: EMPLOYEE MANAGEMENT (CRUD) -->
+      <div id="pane-employees" class="admin-tab-pane">
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Company Employee Registry</h3>
+              <p>Manage employee records, department assignments, shift allocations, and scannable barcodes</p>
+            </div>
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <input type="text" id="emp-search-input" placeholder="Search by name, ID, or title..." class="form-control" style="width:240px;" />
+              <select id="emp-wing-filter" class="form-control" style="width:190px;">
+                <option value="">All Business Wings</option>
+                <option value="Digital Solutions">SS40 Digital Solutions</option>
+                <option value="Products">SS40 SaaS Products</option>
+                <option value="Academics">SS40 Tech Academics</option>
+                <option value="Operations">Operations & HR</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Employee Name & ID</th>
+                  <th>Wing & Role</th>
+                  <th>Barcode ID</th>
+                  <th>Contact Phone</th>
+                  <th>Account Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="employees-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: ATTENDANCE LOGS & REPORTS -->
+      <div id="pane-logs" class="admin-tab-pane">
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Attendance Audit Logs & History</h3>
+              <p>Complete historical logs with punch times, working hours, and compliance flags</p>
+            </div>
+            <button id="download-csv-action-btn" class="btn btn-primary" onclick="window.open('/api/attendance/export', '_blank')">
+              📥 Download Full CSV
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Employee Name</th>
+                  <th>Wing</th>
+                  <th>Punch In</th>
+                  <th>Punch Out</th>
+                  <th>Duration</th>
+                  <th>Status Flag</th>
+                </tr>
+              </thead>
+              <tbody id="all-logs-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: MONTHLY HEATMAP & STREAKS -->
+      <div id="pane-heatmap" class="admin-tab-pane">
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Monthly Attendance Consistency Matrix</h3>
+              <p>GitHub-style daily attendance intensity and punctuality performance</p>
+            </div>
+            <div style="font-size:0.8rem; font-weight:700; color:var(--teal-700);">
+              Overall Compliance: <span id="stat-punctuality-score">94%</span> (<span id="stat-total-logs">250+</span> Shifts)
+            </div>
+          </div>
+          
+          <div class="heatmap-container">
+            <div id="attendance-heatmap-grid" class="heatmap-grid">
+              <!-- Rendered via heatmap.js -->
+            </div>
+            <div class="heatmap-legend">
+              <span>Less Punctual</span>
+              <div class="legend-square level-0" style="background:#F1F5F9;"></div>
+              <div class="legend-square level-1" style="background:#A7F3D0;"></div>
+              <div class="legend-square level-2" style="background:#34D399;"></div>
+              <div class="legend-square level-3" style="background:#10B981;"></div>
+              <div class="legend-square level-4" style="background:#047857;"></div>
+              <span>Highly Punctual</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Top Punctual Performers & Streaks</h3>
+              <p>Employees with consecutive on-time attendance streaks</p>
+            </div>
+          </div>
+          <div id="top-streaks-container" class="streaks-grid">
+            <!-- Populated via heatmap.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: DIGITAL ID BADGE STUDIO -->
+      <div id="pane-idcard" class="admin-tab-pane">
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>SS40 Network Official ID Badge Studio</h3>
+              <p>Preview and print employee badges with high-resolution Code-128 barcodes</p>
+            </div>
+            <button class="btn btn-primary id-badge-print-tools" onclick="window.idCardStudio.printBadge()">
+              🖨 Print ID Badge
+            </button>
+          </div>
+          
+          <div class="id-badge-container">
+            <div id="id-badge-preview-zone">
+              <!-- Populated by idcard.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: GEOFENCE & OFFICE SETTINGS -->
+      <div id="pane-settings" class="admin-tab-pane">
+        <div class="card-box">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Office Geofence & Shift Policy Parameters</h3>
+              <p>Configure exact headquarters GPS coordinates, security radius, and grace thresholds</p>
+            </div>
+          </div>
+          
+          <form id="settings-form">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Office Latitude</label>
+                <input type="number" step="any" id="setting-office-lat" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Office Longitude</label>
+                <input type="number" step="any" id="setting-office-lng" class="form-control" required />
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Allowed Geofence Radius (meters)</label>
+                <input type="number" id="setting-radius" class="form-control" min="20" max="1000" required />
+              </div>
+              <div class="form-group">
+                <label>Grace Period (minutes)</label>
+                <input type="number" id="setting-grace" class="form-control" min="0" max="60" required />
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Shift Start Time</label>
+                <input type="time" id="setting-shift-start" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Shift End Time</label>
+                <input type="time" id="setting-shift-end" class="form-control" required />
+              </div>
+            </div>
+
+            <div style="display:flex; gap:0.85rem; margin-top:1.5rem;">
+              <button type="submit" class="btn btn-primary">Save Configuration</button>
+              <button type="button" id="sync-current-gps-btn" class="btn btn-secondary">
+                📍 Set Office to My Current Device GPS
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: STYLIZED GEOFENCE VIOLATION WARNING MODAL
+       ========================================================================= -->
+  <div id="geofence-alert-modal" class="geofence-alert-modal">
+    <div class="geofence-alert-box">
+      <div class="geofence-alert-header">
+        <div class="geofence-alert-radar">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3>GEOFENCE PERIMETER RESTRICTION</h3>
+        <p id="geo-alert-emp">Employee Identification Verified</p>
+      </div>
+
+      <div class="geofence-alert-body">
+        <div class="geofence-warning-quote">
+          “You are outside the SS40 Network office premises. Please move to the designated work zone.”
+        </div>
+
+        <div class="geofence-radar-comparison">
+          <div class="radar-comp-item">
+            <div class="title">Current Distance</div>
+            <div id="geo-alert-distance" class="stat outside-val">485 meters</div>
+          </div>
+          <div class="radar-comp-item">
+            <div class="title">Allowed Perimeter</div>
+            <div id="geo-alert-radius" class="stat limit-val">150 meters</div>
+          </div>
+        </div>
+
+        <div class="geofence-office-target">
+          <strong>Designated Work Facility:</strong><br />
+          <span id="geo-alert-address">SS40 NETWORK PRIVATE LIMITED, 1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli</span>
+        </div>
+
+        <div class="geofence-alert-actions">
+          <button id="close-geo-alert-btn" class="alert-action-btn primary">Acknowledge</button>
+          <button id="geo-alert-simulate-inside" class="alert-action-btn secondary">Test Inside Office (Demo)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: PUNCH CONFIRMATION CARD / MODAL
+       ========================================================================= -->
+  <div id="punch-modal" class="punch-modal-backdrop">
+    <div class="punch-card-wrapper">
+      <div id="punch-modal-banner" class="punch-header-banner check-in">
+        <div id="punch-modal-icon" class="punch-icon-badge">✓</div>
+        <h2 id="punch-modal-title">ATTENDANCE CLOCKED IN</h2>
+        <p id="punch-modal-sub">Welcome to SS40 Network Private Limited</p>
+      </div>
+
+      <div class="punch-card-body">
+        <div class="punch-emp-profile">
+          <div id="punch-modal-avatar" class="emp-avatar-lg">S</div>
+          <div>
+            <div id="punch-modal-name" class="emp-name-lg">Selvakumar S.</div>
+            <div id="punch-modal-role" class="emp-role-lg">Principal Solutions Architect</div>
+            <div id="punch-modal-dept" class="emp-dept-lg">SS40 Digital Solutions</div>
+          </div>
+        </div>
+
+        <div class="punch-details-grid">
+          <div class="punch-metric-tile">
+            <div class="label">Time Registered</div>
+            <div id="punch-modal-time" class="value">09:24 AM</div>
+          </div>
+          <div class="punch-metric-tile">
+            <div class="label">Shift Status</div>
+            <div id="punch-modal-status" class="value" style="margin-top:0.3rem;">
+              <span class="status-badge on-time">On-Time</span>
+            </div>
+          </div>
+          <div id="punch-modal-hours-wrap" class="punch-metric-tile" style="grid-column: 1 / -1; display:none;">
+            <div class="label">Total Working Duration</div>
+            <div id="punch-modal-hours" class="value">8.95 hrs</div>
+          </div>
+        </div>
+
+        <p id="punch-modal-greeting" style="font-size:0.84rem; color:var(--text-muted); text-align:center; margin-bottom:1.25rem;">
+          Punch recorded successfully.
+        </p>
+
+        <div class="punch-dismiss-bar">
+          <button id="punch-modal-dismiss-btn" class="dismiss-btn">Dismiss & Ready Next Scan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: ADMIN LOGIN GATEWAY
+       ========================================================================= -->
+  <div id="admin-login-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Administrative Gateway</h3>
+        <button id="close-login-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="admin-login-form">
+          <div class="form-group">
+            <label>Admin Email</label>
+            <input type="email" id="login-email" class="form-control" value="admin@ss40network.com" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" class="form-control" value="admin123" required />
+          </div>
+          <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:0.6rem;">
+            <button type="submit" class="btn btn-primary" style="justify-content:center;">Authenticate Session</button>
+            <button type="button" id="demo-admin-login-btn" class="btn btn-secondary" style="justify-content:center;">
+              ⚡ Quick Demo 1-Click Login
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: ADD / EDIT EMPLOYEE MODAL
+       ========================================================================= -->
+  <div id="employee-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="employee-modal-title">Add New SS40 Employee</h3>
+        <button id="close-emp-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="employee-form">
+          <div class="form-group">
+            <label>Full Legal Name</label>
+            <input type="text" id="emp-name-input" class="form-control" placeholder="e.g. Ramesh Kumar" required />
+          </div>
+          <div class="form-group">
+            <label>Official Email</label>
+            <input type="email" id="emp-email-input" class="form-control" placeholder="ramesh@ss40network.com" required />
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Business Wing / Dept</label>
+              <select id="emp-dept-select" class="form-control" required>
+                <option value="SS40 Digital Solutions">SS40 Digital Solutions</option>
+                <option value="SS40 SaaS Products">SS40 SaaS Products</option>
+                <option value="SS40 Tech Academics">SS40 Tech Academics</option>
+                <option value="Executive & Operations">Executive & Operations</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Designation</label>
+              <input type="text" id="emp-designation-input" class="form-control" placeholder="Full-Stack Engineer" required />
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" id="emp-phone-input" class="form-control" placeholder="+91 98765 43210" required />
+            </div>
+            <div class="form-group">
+              <label>Blood Group</label>
+              <select id="emp-blood-select" class="form-control">
+                <option value="O+">O+</option>
+                <option value="A+">A+</option>
+                <option value="B+">B+</option>
+                <option value="AB+">AB+</option>
+                <option value="O-">O-</option>
+                <option value="A-">A-</option>
+                <option value="B-">B-</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Emergency Contact Phone</label>
+            <input type="text" id="emp-emergency-input" class="form-control" placeholder="+91 94421 88200" />
+          </div>
+          <div style="margin-top:1.5rem;">
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save Employee Credentials</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: INDIVIDUAL EMPLOYEE ATTENDANCE HISTORY
+       ========================================================================= -->
+  <div id="emp-history-modal" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="hist-emp-name">Employee Attendance History</h3>
+          <p id="hist-emp-sub" style="font-size:0.75rem; color:var(--text-muted);"></p>
+        </div>
+        <button id="close-history-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:1.25rem;">
+          <div class="kpi-card" style="padding:0.75rem;">
+            <div class="kpi-title" style="font-size:0.68rem;">Total Logged</div>
+            <div id="hist-stat-total" class="kpi-main-number" style="font-size:1.3rem;">30</div>
+          </div>
+          <div class="kpi-card" style="padding:0.75rem;">
+            <div class="kpi-title" style="font-size:0.68rem;">Punctuality</div>
+            <div id="hist-stat-ontime" class="kpi-main-number" style="font-size:1.3rem;">96%</div>
+          </div>
+          <div class="kpi-card" style="padding:0.75rem;">
+            <div class="kpi-title" style="font-size:0.68rem;">Current Streak</div>
+            <div id="hist-stat-streak" class="kpi-main-number" style="font-size:1.3rem;">🔥 14</div>
+          </div>
+          <div class="kpi-card" style="padding:0.75rem;">
+            <div class="kpi-title" style="font-size:0.68rem;">Avg Hours</div>
+            <div id="hist-stat-avg" class="kpi-main-number" style="font-size:1.3rem;">9.1</div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Duration</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="emp-history-tbody">
+              <!-- Populated via openEmployeeHistory -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 6: DIGITAL ID BADGE PREVIEW & PRINT
+       ========================================================================= -->
+  <div id="id-badge-modal" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Company ID Badge</h3>
+        <button id="close-id-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <div id="modal-id-card-render-zone" style="display:flex; justify-content:center; margin-bottom:1.5rem;">
+          <!-- Populated by idcard.js -->
+        </div>
+        <button id="print-badge-modal-btn" class="btn btn-primary" style="width:100%; justify-content:center;">
+          🖨 Print / Save Badge
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Modules -->
+  <script src="/js/audio.js"></script>
+  <script src="/js/geofence.js"></script>
+  <script src="/js/scanner.js"></script>
+  <script src="/js/idcard.js"></script>
+  <script src="/js/heatmap.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+
+</body>
+</html>
