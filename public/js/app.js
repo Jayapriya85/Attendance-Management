@@ -350,6 +350,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Toggle torch / flashlight button
+  const toggleTorchBtn = document.getElementById('toggle-torch-btn');
+  if (toggleTorchBtn) {
+    toggleTorchBtn.addEventListener('click', async () => {
+      await window.barcodeScanner.toggleTorch();
+    });
+  }
+
   // Hardware Manual Input Submit
   const hwSubmitBtn = document.getElementById('hardware-submit-btn');
   const hwInput = document.getElementById('hardware-barcode-input');

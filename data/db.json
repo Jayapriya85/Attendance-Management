@@ -150,9 +150,64 @@
       "status": "Active",
       "joinedDate": "2023-06-15",
       "emergencyContact": "+91 98940 33100"
+    },
+    {
+      "id": "SS40-EMP-1009",
+      "name": "Riya",
+      "email": "riya@ss40network.com",
+      "department": "SS40 Digital Solutions",
+      "wing": "Digital Solutions",
+      "designation": "Cloud Engineer",
+      "barcode": "SS40-EMP-1009",
+      "phone": "+91 94421 88201",
+      "bloodGroup": "O+",
+      "shift": "09:30 - 18:30",
+      "avatarColor": "#2563EB",
+      "status": "Active",
+      "joinedDate": "2026-10-10",
+      "emergencyContact": "+91 94421 88299"
+    },
+    {
+      "id": "SS40-EMP-1010",
+      "name": "Suresh Raina",
+      "email": "test.qa1791609108113@ss40network.com",
+      "department": "SS40 Digital Solutions",
+      "wing": "Digital Solutions",
+      "designation": "Senior QA Architect",
+      "barcode": "SS40-EMP-1010",
+      "phone": "+91 99887 76655",
+      "bloodGroup": "B+",
+      "shift": "09:30 - 18:30",
+      "avatarColor": "#D97706",
+      "status": "Active",
+      "joinedDate": "2026-10-10",
+      "emergencyContact": "+91 8300591750"
     }
   ],
   "attendance": [
+    {
+      "id": "ATT-20261010-8151",
+      "employeeId": "SS40-EMP-1010",
+      "employeeName": "Suresh Raina",
+      "department": "SS40 Digital Solutions",
+      "designation": "Senior QA Architect",
+      "date": "2026-10-10",
+      "checkIn": "2026-10-10T05:11:48.149Z",
+      "checkInTime": "10:41 AM",
+      "checkOut": "2026-10-10T05:11:48.162Z",
+      "checkOutTime": "10:41 AM",
+      "hoursWorked": 0,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728612,
+        "lng": 77.72753800000001,
+        "distanceMeters": 24,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "1st Floor, Municipal Corporation Incubation Centre (Near by trade centre), Sree Puram, Tirunelveli, Tamil Nadu 627001"
+      }
+    },
     {
       "id": "ATT-20261010-1401",
       "employeeId": "SS40-EMP-1005",
@@ -185,9 +240,9 @@
       "date": "2026-10-10",
       "checkIn": "2026-10-10T04:23:54.948Z",
       "checkInTime": "09:53 AM",
-      "checkOut": null,
-      "checkOutTime": null,
-      "hoursWorked": null,
+      "checkOut": "2026-10-10T05:13:52.162Z",
+      "checkOutTime": "10:43 AM",
+      "hoursWorked": 0.83,
       "status": "LATE",
       "method": "CAMERA_BARCODE",
       "location": {
