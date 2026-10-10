@@ -14,7 +14,7 @@
     "shiftStartTime": "09:30",
     "shiftEndTime": "18:30",
     "graceMinutes": 15,
-    "demoMode": "REAL_GPS"
+    "demoMode": "FORCE_INSIDE"
   },
   "admin": {
     "username": "admin@ss40network.com",
@@ -153,6 +153,98 @@
     }
   ],
   "attendance": [
+    {
+      "id": "ATT-20261010-1401",
+      "employeeId": "SS40-EMP-1005",
+      "employeeName": "Karthikeyan M.",
+      "department": "SS40 SaaS Products",
+      "designation": "AI Systems & Cloud Specialist",
+      "date": "2026-10-10",
+      "checkIn": "2026-10-10T04:24:01.401Z",
+      "checkInTime": "09:54 AM",
+      "checkOut": "2026-10-10T04:24:07.019Z",
+      "checkOutTime": "09:54 AM",
+      "hoursWorked": 0,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728612,
+        "lng": 77.72753800000001,
+        "distanceMeters": 22,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "SS40 Network Incubation Centre, Tirunelveli"
+      }
+    },
+    {
+      "id": "ATT-20261010-4948",
+      "employeeId": "SS40-EMP-1004",
+      "employeeName": "Ananya Sundaram",
+      "department": "SS40 Digital Solutions",
+      "designation": "Lead UI/UX Architect",
+      "date": "2026-10-10",
+      "checkIn": "2026-10-10T04:23:54.948Z",
+      "checkInTime": "09:53 AM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728612,
+        "lng": 77.72753800000001,
+        "distanceMeters": 22,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "SS40 Network Incubation Centre, Tirunelveli"
+      }
+    },
+    {
+      "id": "ATT-20261010-8570",
+      "employeeId": "SS40-EMP-1003",
+      "employeeName": "Vigneshwaran R.",
+      "department": "SS40 SaaS Products",
+      "designation": "Lead Product Engineer (ClearInvoice)",
+      "date": "2026-10-10",
+      "checkIn": "2026-10-10T04:23:48.570Z",
+      "checkInTime": "09:53 AM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728612,
+        "lng": 77.72753800000001,
+        "distanceMeters": 22,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "SS40 Network Incubation Centre, Tirunelveli"
+      }
+    },
+    {
+      "id": "ATT-20261010-4796",
+      "employeeId": "SS40-EMP-1001",
+      "employeeName": "Selvakumar S.",
+      "department": "SS40 Digital Solutions",
+      "designation": "Principal Solutions Architect",
+      "date": "2026-10-10",
+      "checkIn": "2026-10-10T04:23:34.795Z",
+      "checkInTime": "09:53 AM",
+      "checkOut": "2026-10-10T04:23:41.885Z",
+      "checkOutTime": "09:53 AM",
+      "hoursWorked": 0,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728612,
+        "lng": 77.72753800000001,
+        "distanceMeters": 22,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "SS40 Network Incubation Centre, Tirunelveli"
+      }
+    },
     {
       "id": "ATT-20260901-1001",
       "employeeId": "SS40-EMP-1001",
