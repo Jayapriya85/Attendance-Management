@@ -83,21 +83,35 @@ async function updateSettings(updates) {
 // ADMIN USERS
 // ============================================================================
 async function getAdminUser(email) {
-  if (!isSupabaseActive) return null;
-  try {
-    const { data, error } = await supabase.from('admin_users').select('*').eq('email', email).single();
-    if (!error && data) {
-      return {
-        id: data.id,
-        username: data.email,
-        passwordHash: data.password_hash,
-        name: data.name,
-        role: data.role
-      };
+  if (isSupabaseActive) {
+    try {
+      const { data, error } = await supabase.from('admin_users').select('*').eq('email', email).single();
+      if (!error && data) {
+        return {
+          id: data.id,
+          username: data.email,
+          passwordHash: data.password_hash,
+          name: data.name,
+          role: data.role
+        };
+      }
+    } catch (e) {
+      console.warn('[Supabase] Admin lookup error:', e.message);
     }
-  } catch (e) {
-    console.warn('[Supabase] Admin lookup error:', e.message);
   }
+
+  // Default administrator credentials fallback
+  const normalizedEmail = (email || '').toLowerCase().trim();
+  if (normalizedEmail === 'admin@ss40network.com' || normalizedEmail === 'admin') {
+    return {
+      id: 1,
+      username: 'admin@ss40network.com',
+      passwordHash: 'admin123',
+      name: 'SS40 Systems Administrator',
+      role: 'Super Admin'
+    };
+  }
+
   return null;
 }
 
