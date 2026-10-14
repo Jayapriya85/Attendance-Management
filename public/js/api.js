@@ -92,8 +92,14 @@ class ApiService {
     });
   }
 
-  // Attendance Punch
-  async punchAttendance(barcodeOrId, coords, method = 'CAMERA_BARCODE') {
+  async deleteEmployeePermanently(id) {
+    return this.request(`/api/employees/${encodeURIComponent(id)}?permanent=true`, {
+      method: 'DELETE'
+    });
+  }
+
+  // Attendance Punch & Break Actions
+  async punchAttendance(barcodeOrId, coords, method = 'CAMERA_BARCODE', action = null) {
     return this.request('/api/attendance/punch', {
       method: 'POST',
       body: JSON.stringify({
@@ -101,7 +107,8 @@ class ApiService {
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
         accuracy: coords ? coords.accuracy : null,
-        method
+        method,
+        action
       })
     });
   }

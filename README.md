@@ -6,7 +6,7 @@ Registered Office: **1st Floor, Municipal Corporation Incubation Centre (Near by
 
 ---
 
-## 🌟 Key Architectural Features
+## Key Architectural Features
 
 ### 1. Dual Barcode Scanning Engine
 - **Mobile / Camera Mode:** Built-in WebRTC barcode scanner using `Html5Qrcode` supporting **Code-128**, **Code-39**, **QR Code**, and **EAN-13** with holographic laser sweeping animation, aiming corner brackets, and camera flipping (Front / Environment).
@@ -45,7 +45,7 @@ Registered Office: **1st Floor, Municipal Corporation Incubation Centre (Near by
 
 ---
 
-## 🚀 Running the Application
+## Running the Application
 
 ### Prerequisites
 - Node.js (v18+ or v24+)
@@ -66,11 +66,11 @@ The web application runs on **`http://localhost:3000`**.
 - **Portal URL:** Click **"Admin Control Center"** in the top navigation bar.
 - **Email:** `admin@ss40network.com`
 - **Password:** `admin123`
-- *(Or click the **"⚡ Quick Demo 1-Click Login"** button inside the login modal).*
+- *(Or click the **"Quick Demo 1-Click Login"** button inside the login modal).*
 
 ---
 
-## 🏢 Company Profile Reference
+## Company Profile Reference
 - **Legal Entity:** SS40 NETWORK PRIVATE LIMITED
 - **CIN:** U72900TN2023PTC160892
 - **Website:** https://ss40network.com/

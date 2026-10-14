@@ -185,31 +185,67 @@ app.get('/api/employees/:id', async (req, res) => {
 
 app.post('/api/employees', async (req, res) => {
   try {
-    const { name, email, department } = req.body;
-    if (!name || !email || !department) {
-      return res.status(400).json({ success: false, message: 'Name, email, and department are required' });
+    const name = (req.body.name || '').trim();
+    const email = (req.body.email || '').trim().toLowerCase();
+    const department = (req.body.department || req.body.dept || 'SS40 Digital Solutions').trim();
+    const designation = (req.body.designation || req.body.role || req.body.title || 'Associate Specialist').trim();
+    const phone = (req.body.phone || '').trim();
+    const bloodGroup = (req.body.bloodGroup || req.body.blood_group || 'O+').trim();
+    const emergencyContact = (req.body.emergencyContact || req.body.emergency_contact || '+91 8300591750').trim();
+    const barcode = (req.body.barcode || '').trim();
+
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Employee full legal name is required' });
+    }
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Employee official email address is required' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid official email address format' });
     }
 
-    const existing = await db.getEmployees({ search: email });
-    if (existing.some(e => e.email.toLowerCase() === email.toLowerCase().trim())) {
-      return res.status(400).json({ success: false, message: 'An employee with this email already exists' });
+    // Verify duplicate email
+    const existing = await db.getEmployeeByEmail(email);
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: `An employee with email '${email}' is already registered (ID: ${existing.id})`
+      });
     }
 
-    const newEmp = await db.createEmployee(req.body);
+    const newEmp = await db.createEmployee({
+      name,
+      email,
+      department,
+      designation,
+      role: designation,
+      phone,
+      bloodGroup,
+      emergencyContact,
+      barcode
+    });
+
     res.status(201).json({
       success: true,
-      message: 'Employee registered successfully',
+      message: `Employee ${newEmp.name} (${newEmp.id}) registered successfully`,
       employee: newEmp
     });
   } catch (err) {
     console.error('Create employee error:', err);
-    res.status(500).json({ success: false, message: 'Failed to register employee' });
+    res.status(err.code === 'EMAIL_EXISTS' ? 400 : 500).json({
+      success: false,
+      message: err.message || 'Failed to register employee in database'
+    });
   }
 });
 
 app.put('/api/employees/:id', async (req, res) => {
   try {
-    const updated = await db.updateEmployee(req.params.id, req.body);
+    const payload = { ...req.body };
+    if (!payload.designation && payload.role) {
+      payload.designation = payload.role;
+    }
+    const updated = await db.updateEmployee(req.params.id, payload);
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Employee not found' });
     }
@@ -220,12 +256,24 @@ app.put('/api/employees/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Update employee error:', err);
-    res.status(500).json({ success: false, message: 'Failed to update employee' });
+    res.status(500).json({ success: false, message: err.message || 'Failed to update employee' });
   }
 });
 
 app.delete('/api/employees/:id', async (req, res) => {
   try {
+    const isPermanent = req.query.permanent === 'true' || req.query.force === 'true';
+    if (isPermanent) {
+      const ok = await db.deleteEmployee(req.params.id);
+      if (!ok) {
+        return res.status(404).json({ success: false, message: 'Employee not found' });
+      }
+      return res.json({
+        success: true,
+        message: 'Employee permanently deleted from records'
+      });
+    }
+
     const toggled = await db.toggleEmployeeStatus(req.params.id);
     if (!toggled) {
       return res.status(404).json({ success: false, message: 'Employee not found' });
@@ -237,7 +285,7 @@ app.delete('/api/employees/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Delete/Toggle employee error:', err);
-    res.status(500).json({ success: false, message: 'Failed to toggle employee status' });
+    res.status(500).json({ success: false, message: 'Failed to process employee deletion' });
   }
 });
 
@@ -246,7 +294,10 @@ app.delete('/api/employees/:id', async (req, res) => {
 // -------------------------------------------------------------
 app.post('/api/attendance/punch', async (req, res) => {
   try {
-    const { barcodeOrId, lat, lng, accuracy, method = 'CAMERA_BARCODE' } = req.body;
+    const { barcodeOrId, method = 'CAMERA_BARCODE', action } = req.body;
+    const rawLat = req.body.lat ?? req.body.coords?.latitude ?? req.body.coords?.lat;
+    const rawLng = req.body.lng ?? req.body.coords?.longitude ?? req.body.coords?.lng;
+    const rawAccuracy = req.body.accuracy ?? req.body.coords?.accuracy;
     const settings = await db.getSettings();
 
     if (!barcodeOrId) {
@@ -277,34 +328,25 @@ app.post('/api/attendance/punch', async (req, res) => {
     }
 
     // 2. Geofence & Location Strict Validation
-    let userLat = parseFloat(lat);
-    let userLng = parseFloat(lng);
-    let userAccuracy = parseFloat(accuracy) || 15;
-    let distanceMeters = 0;
+    const userLat = parseFloat(rawLat);
+    const userLng = parseFloat(rawLng);
+    const userAccuracy = parseFloat(rawAccuracy) || 15;
 
-    if (!isNaN(userLat) && !isNaN(userLng)) {
-      // Calculate authentic physical Haversine distance
-      distanceMeters = calculateDistanceMeters(
-        userLat,
-        userLng,
-        settings.officeLat,
-        settings.officeLng
-      );
-    } else if (settings.demoMode === 'FORCE_OUTSIDE') {
-      userLat = settings.officeLat + 0.0042;
-      userLng = settings.officeLng + 0.0042;
-      distanceMeters = 485;
-    } else if (settings.demoMode === 'FORCE_INSIDE') {
-      userLat = settings.officeLat + 0.0001;
-      userLng = settings.officeLng + 0.0001;
-      distanceMeters = 24;
-    } else {
+    if (isNaN(userLat) || isNaN(userLng)) {
       return res.status(400).json({
         success: false,
         code: 'LOCATION_REQUIRED',
-        message: 'High-precision GPS coordinates are required for attendance verification.'
+        message: 'High-precision physical GPS coordinates are required for attendance verification.'
       });
     }
+
+    // Calculate authentic physical Haversine distance
+    const distanceMeters = calculateDistanceMeters(
+      userLat,
+      userLng,
+      settings.officeLat,
+      settings.officeLng
+    );
 
     // Strict radius check
     const isInside = distanceMeters <= settings.radiusMeters;
@@ -330,7 +372,7 @@ app.post('/api/attendance/punch', async (req, res) => {
       });
     }
 
-    // 3. Process Check-In or Check-Out
+    // 3. Process Attendance & Break Actions
     const now = new Date();
     const todayStr = getLocalDateString(now);
     const isoTimestamp = now.toISOString();
@@ -373,6 +415,11 @@ app.post('/api/attendance/punch', async (req, res) => {
         checkInTime: timeFormatted,
         checkOut: null,
         checkOutTime: null,
+        breakStart: null,
+        breakStartTime: null,
+        breakEnd: null,
+        breakEndTime: null,
+        breakMinutes: 0,
         hoursWorked: null,
         status: status,
         method: method,
@@ -396,44 +443,130 @@ app.post('/api/attendance/punch', async (req, res) => {
         status: status,
         record: newRecord,
         employee: employee,
-        greeting: `Welcome, ${employee.name.split(' ')[0]}! You have clocked in at ${timeFormatted}.`
+        greeting: `Welcome, ${employee.name.split(' ')[0]}! Clocked in at ${timeFormatted}.`
       });
     } else if (!todayRecord.checkOut) {
-      // ---------------------------------------------------------
-      // ACTION: CHECK-OUT (PUNCH OUT)
-      // ---------------------------------------------------------
-      const checkInDate = new Date(todayRecord.checkIn);
-      const diffMs = now.getTime() - checkInDate.getTime();
-      const hoursWorked = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+      const isOnBreak = Boolean(todayRecord.breakStart && !todayRecord.breakEnd);
 
-      const [endHour, endMin] = settings.shiftEndTime.split(':').map(Number);
-      const shiftEndMinutes = endHour * 60 + endMin;
+      // Handle explicit Break Start
+      if (action === 'BREAK_START') {
+        if (isOnBreak) {
+          return res.json({
+            success: true,
+            action: 'ALREADY_ON_BREAK',
+            message: `${employee.name} is already on break since ${todayRecord.breakStartTime || todayRecord.breakStart}.`,
+            employee: employee,
+            record: todayRecord
+          });
+        }
 
-      let finalStatus = todayRecord.status;
-      if (currentMinutesFromMidnight < shiftEndMinutes - 30) {
-        finalStatus = (finalStatus === 'LATE') ? 'LATE' : 'EARLY_LEAVING';
-      } else if (currentMinutesFromMidnight > shiftEndMinutes + 45 && finalStatus === 'ON_TIME') {
-        finalStatus = 'OVERTIME';
+        const updated = await db.updateAttendanceLog(todayRecord.id, {
+          breakStart: isoTimestamp,
+          breakStartTime: timeFormatted,
+          breakEnd: null,
+          breakEndTime: null,
+          status: 'ON_BREAK'
+        });
+
+        return res.json({
+          success: true,
+          action: 'BREAK_START',
+          message: `Break Started for ${employee.name}`,
+          time: timeFormatted,
+          status: 'ON_BREAK',
+          record: updated,
+          employee: employee,
+          greeting: `Enjoy your break, ${employee.name.split(' ')[0]}! Clocked out for break at ${timeFormatted}.`
+        });
       }
 
-      const updated = await db.updateAttendanceLog(todayRecord.id, {
-        checkOut: isoTimestamp,
-        checkOutTime: timeFormatted,
-        hoursWorked: hoursWorked,
-        status: finalStatus
-      });
+      // Handle explicit Break End (Resume Work)
+      if (action === 'BREAK_END' || (isOnBreak && (!action || action === 'AUTO'))) {
+        const breakStartMs = todayRecord.breakStart ? new Date(todayRecord.breakStart).getTime() : now.getTime();
+        const durationMins = Math.max(1, Math.round((now.getTime() - breakStartMs) / (1000 * 60)));
+        const totalBreakMinutes = (parseFloat(todayRecord.breakMinutes) || 0) + durationMins;
+        const restoredStatus = todayRecord.status === 'ON_BREAK' ? 'ON_TIME' : todayRecord.status;
 
-      return res.json({
-        success: true,
-        action: 'CHECK_OUT',
-        message: `Punch Out Recorded for ${employee.name}`,
-        time: timeFormatted,
-        status: finalStatus,
-        hoursWorked: hoursWorked,
-        record: updated,
-        employee: employee,
-        greeting: `Good work, ${employee.name.split(' ')[0]}! Total hours today: ${hoursWorked} hrs. Clocked out at ${timeFormatted}.`
-      });
+        const updated = await db.updateAttendanceLog(todayRecord.id, {
+          breakEnd: isoTimestamp,
+          breakEndTime: timeFormatted,
+          breakMinutes: totalBreakMinutes,
+          status: restoredStatus
+        });
+
+        return res.json({
+          success: true,
+          action: 'BREAK_END',
+          message: `Resumed from Break for ${employee.name}`,
+          time: timeFormatted,
+          breakDurationMinutes: durationMins,
+          totalBreakMinutes: totalBreakMinutes,
+          status: restoredStatus,
+          record: updated,
+          employee: employee,
+          greeting: `Welcome back, ${employee.name.split(' ')[0]}! Break ended at ${timeFormatted} (${durationMins}m).`
+        });
+      }
+
+      // If already clocked in and not on break, and action is not specified: prompt choices
+      if (!action || action === 'AUTO') {
+        return res.json({
+          success: true,
+          requiresAction: true,
+          employee: employee,
+          currentStatus: 'CLOCKED_IN',
+          checkInTime: todayRecord.checkInTime,
+          record: todayRecord,
+          allowedActions: ['BREAK_START', 'CHECK_OUT'],
+          message: `${employee.name} is currently clocked in since ${todayRecord.checkInTime}. Choose an action below:`
+        });
+      }
+
+      // Handle Check-Out (Punch Out)
+      if (action === 'CHECK_OUT') {
+        let totalBreakMinutes = parseFloat(todayRecord.breakMinutes) || 0;
+        if (isOnBreak) {
+          const breakStartMs = new Date(todayRecord.breakStart).getTime();
+          totalBreakMinutes += Math.max(1, Math.round((now.getTime() - breakStartMs) / (1000 * 60)));
+        }
+
+        const checkInDate = new Date(todayRecord.checkIn);
+        const diffMs = now.getTime() - checkInDate.getTime();
+        const netHours = Math.max(0, (diffMs / (1000 * 60 * 60)) - (totalBreakMinutes / 60));
+        const hoursWorked = parseFloat(netHours.toFixed(2));
+
+        const [endHour, endMin] = settings.shiftEndTime.split(':').map(Number);
+        const shiftEndMinutes = endHour * 60 + endMin;
+
+        let finalStatus = todayRecord.status;
+        if (finalStatus === 'ON_BREAK') finalStatus = 'ON_TIME';
+        if (currentMinutesFromMidnight < shiftEndMinutes - 30) {
+          finalStatus = (finalStatus === 'LATE') ? 'LATE' : 'EARLY_LEAVING';
+        } else if (currentMinutesFromMidnight > shiftEndMinutes + 45 && finalStatus === 'ON_TIME') {
+          finalStatus = 'OVERTIME';
+        }
+
+        const updated = await db.updateAttendanceLog(todayRecord.id, {
+          checkOut: isoTimestamp,
+          checkOutTime: timeFormatted,
+          breakMinutes: totalBreakMinutes,
+          hoursWorked: hoursWorked,
+          status: finalStatus
+        });
+
+        return res.json({
+          success: true,
+          action: 'CHECK_OUT',
+          message: `Punch Out Recorded for ${employee.name}`,
+          time: timeFormatted,
+          status: finalStatus,
+          hoursWorked: hoursWorked,
+          totalBreakMinutes: totalBreakMinutes,
+          record: updated,
+          employee: employee,
+          greeting: `Good work, ${employee.name.split(' ')[0]}! Total hours today: ${hoursWorked} hrs. Clocked out at ${timeFormatted}.`
+        });
+      }
     } else {
       // Already checked in and checked out today
       return res.json({
@@ -541,6 +674,12 @@ app.get('/api/attendance/stats', async (req, res) => {
         }
       }
 
+      const onTimeCount = empLogs.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME').length;
+      const graceCount = empLogs.filter(a => a.status === 'GRACE_PERIOD').length;
+      const lateCount = empLogs.filter(a => a.status === 'LATE').length;
+      const totalEmpLogs = empLogs.length;
+      const consistencyRate = totalEmpLogs > 0 ? Math.round(((onTimeCount + graceCount) / totalEmpLogs) * 100) : 100;
+
       return {
         id: emp.id,
         name: emp.name,
@@ -548,9 +687,15 @@ app.get('/api/attendance/stats', async (req, res) => {
         designation: emp.designation,
         avatarColor: emp.avatarColor,
         streak: streak,
-        totalAttendance: empLogs.length
+        totalAttendance: totalEmpLogs,
+        onTimeCount,
+        graceCount,
+        lateCount,
+        consistencyRate,
+        lastCheckIn: empLogs.length > 0 ? empLogs[0].checkInTime : null,
+        lastStatus: empLogs.length > 0 ? empLogs[0].status : null
       };
-    }).sort((a, b) => b.streak - a.streak);
+    }).sort((a, b) => b.streak - a.streak || b.consistencyRate - a.consistencyRate);
 
     res.json({
       success: true,
@@ -559,10 +704,12 @@ app.get('/api/attendance/stats', async (req, res) => {
         onTimeLogs,
         graceLogs,
         lateLogs,
-        punctualityScore
+        punctualityScore,
+        activeStaffCount: employees.length
       },
       heatmapData: Object.values(dateMap).sort((a, b) => new Date(a.date) - new Date(b.date)),
-      topStreaks: employeeStreaks.slice(0, 5)
+      topStreaks: employeeStreaks.slice(0, 10),
+      allEmployeePerformance: employeeStreaks
     });
   } catch (err) {
     console.error('Get stats error:', err);
@@ -589,7 +736,13 @@ app.get('/api/attendance', async (req, res) => {
 
 app.get('/api/attendance/export', async (req, res) => {
   try {
-    const list = await db.getAttendanceLogs(req.query);
+    const departmentFilter = req.query.department;
+    const query = { ...req.query };
+    if (departmentFilter === 'all' || !departmentFilter) {
+      delete query.department;
+    }
+
+    const list = await db.getAttendanceLogs(query);
 
     const headers = [
       'Record ID',
@@ -625,8 +778,12 @@ app.get('/api/attendance/export', async (req, res) => {
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
 
+    const deptSlug = (departmentFilter && departmentFilter !== 'all')
+      ? departmentFilter.replace(/[^a-zA-Z0-9]/g, '_')
+      : 'Total_Company';
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="SS40_Network_Attendance_Report_${getLocalDateString()}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="SS40_Network_Attendance_Report_${deptSlug}_${getLocalDateString()}.csv"`);
     res.send(csvContent);
   } catch (err) {
     console.error('Export CSV error:', err);
@@ -643,7 +800,7 @@ app.listen(PORT, () => {
   console.log(`=======================================================`);
   console.log(` SS40 NETWORK PRIVATE LIMITED - SMART ATTENDANCE SYSTEM `);
   console.log(` Server active on: http://localhost:${PORT}`);
-  console.log(` Database: ${db.isSupabaseActive() ? 'Supabase PostgreSQL' : 'Local Persistent Store (data/db.json)'}`);
+  console.log(` Database: ${db.isSupabaseActive() ? 'Supabase PostgreSQL' : 'Persistent SQLite Database (database/attendance.db)'}`);
   console.log(` Geofence Target: Municipal Corporation Incubation Centre`);
   console.log(` Office Coordinates: 8.728512, 77.727438 (Radius: 150m)`);
   console.log(`=======================================================`);

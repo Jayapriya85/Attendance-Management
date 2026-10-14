@@ -9,7 +9,7 @@
   <!-- Favicon & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   
   <!-- Vendor Libraries -->
   <script src="/vendor/jsbarcode.min.js"></script>
@@ -34,8 +34,7 @@
         <div class="brand-text">
           <h1>SS40 <span class="brand-accent">NETWORK</span></h1>
           <div class="brand-tagline">
-            <span class="office-dot"></span>
-            <span>Tirunelveli Incubation Centre HQ</span>
+            <span>Municipal Corporation Incubation Centre, Tirunelveli</span>
           </div>
         </div>
       </div>
@@ -43,23 +42,17 @@
       <!-- Center: Portal View Switcher -->
       <nav class="nav-pills" aria-label="Portal Navigation">
         <button id="nav-kiosk-btn" class="nav-pill-btn active" title="Fast Barcode Check-in Terminal">
-          <span>⚡</span>
+          <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
           <span>Employee Check-in</span>
         </button>
         <button id="nav-admin-btn" class="nav-pill-btn" title="Management & Analytics Dashboard">
-          <span>🛡</span>
+          <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           <span>Admin Control Center</span>
         </button>
       </nav>
 
-      <!-- Right: Geofence Radar Status & Clock -->
+      <!-- Right: Live Clock & Quick Controls -->
       <div class="header-right">
-        
-        <!-- Live Geofence Radar Badge -->
-        <div id="geofence-live-badge" class="geofence-live-badge inside" title="Strict Location Lock Status">
-          <div class="pulse-radar-dot"></div>
-          <span id="geofence-dist-text">Calculating GPS...</span>
-        </div>
 
         <!-- Live Clock -->
         <div class="header-clock">
@@ -68,8 +61,12 @@
         </div>
 
         <!-- Quick Controls -->
-        <button id="audio-toggle-btn" class="header-action-btn" title="Toggle Audio Chimes">🔊</button>
-        <button id="fullscreen-btn" class="header-action-btn" title="Toggle Fullscreen Kiosk Mode">⛶</button>
+        <button id="audio-toggle-btn" class="header-action-btn" title="Toggle Audio Signals">
+          <svg class="icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <button id="fullscreen-btn" class="header-action-btn" title="Toggle Fullscreen Kiosk Mode">
+          <svg class="icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        </button>
       </div>
 
     </div>
@@ -91,16 +88,14 @@
           
           <div class="terminal-header">
             <div class="terminal-title">
-              <h2><span>🪪</span> Attendance Verification Terminal</h2>
-              <p>Scan your company ID card barcode to record Check-In or Check-Out</p>
+              <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:8px;"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>Attendance Terminal</h2>
+              <p>Scan your employee ID card to mark attendance or manage breaks</p>
             </div>
             
-            <div class="scan-mode-tabs">
-              <button id="mode-camera-btn" class="scan-mode-tab active" title="Use Camera Scanner">
-                <span>📷</span> Mobile / Cam
-              </button>
-              <button id="mode-usb-btn" class="scan-mode-tab" title="Use External Barcode Gun">
-                <span>🔌</span> USB Gun
+            <div class="terminal-controls-header">
+              <button id="camera-toggle-btn" class="btn btn-outline btn-sm">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <span id="camera-toggle-label">Start Camera</span>
               </button>
             </div>
           </div>
@@ -109,80 +104,88 @@
           <div id="camera-viewport-wrap" class="camera-viewport-container">
             <div id="camera-preview"></div>
 
-            <!-- Aim Frame & Holographic Laser Animation -->
+            <!-- Aim Frame Overlay -->
             <div class="scan-aim-overlay">
               <div class="aim-frame">
                 <div class="aim-corner aim-tl"></div>
                 <div class="aim-corner aim-tr"></div>
                 <div class="aim-corner aim-bl"></div>
                 <div class="aim-corner aim-br"></div>
-                <div class="laser-line"></div>
               </div>
-              <div class="aim-caption">ALIGN COMPANY BARCODE WITHIN FRAME</div>
+              <div class="aim-caption">Position barcode in frame</div>
             </div>
 
             <!-- Camera Controls -->
             <div class="camera-controls-bar">
-              <button id="toggle-torch-btn" class="cam-ctrl-btn" title="Toggle Flashlight / Torch">💡</button>
-              <button id="switch-camera-btn" class="cam-ctrl-btn" title="Switch Camera (Front/Rear)">🔄</button>
+              <button id="toggle-torch-btn" class="cam-ctrl-btn" title="Toggle Lighting">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="23"></line><circle cx="12" cy="12" r="5"></circle><line x1="4.22" y1="4.22" x2="7.05" y2="7.05"></line><line x1="16.95" y1="16.95" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="7.05" y2="16.95"></line><line x1="16.95" y1="7.05" x2="19.78" y2="4.22"></line></svg>
+              </button>
+              <button id="switch-camera-btn" class="cam-ctrl-btn" title="Switch Camera Device">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              </button>
             </div>
           </div>
 
-          <!-- USB Hardware Scanner View (Alternative View) -->
-          <div id="usb-scanner-view" class="usb-scanner-view">
-            <div class="usb-icon-halo">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-              </svg>
-            </div>
-            <div>
-              <h3>USB / Bluetooth Barcode Gun Ready</h3>
-              <p>Aim your external handheld barcode scanner at the ID badge and pull the trigger.</p>
-            </div>
-            <div class="hardware-input-wrapper">
-              <input type="text" id="hardware-barcode-input" placeholder="Awaiting hardware scanner input..." autofocus autocomplete="off" />
-              <button id="hardware-submit-btn" class="hardware-input-btn" title="Submit Barcode">➔</button>
-            </div>
-          </div>
-
-          <!-- Terminal Footer: Manual Fallback & Simulation Switcher -->
+          <!-- Terminal Footer: Status Indicator & Manual Fallback -->
           <div class="terminal-footer">
             <div class="kiosk-status-pill">
               <span class="indicator-dot"></span>
-              <span>Geofence Guard Active</span>
-            </div>
-
-            <!-- Simulation Quick Switcher Bar (For testing & evaluation) -->
-            <div class="demo-sim-bar" title="Test different GPS scenarios">
-              <span style="color:var(--text-muted); font-weight:700;">Simulate:</span>
-              <button class="demo-sim-btn active" data-mode="FORCE_INSIDE">Inside Office (24m)</button>
-              <button class="demo-sim-btn" data-mode="FORCE_OUTSIDE">Outside Office (485m)</button>
-              <button class="demo-sim-btn" data-mode="REAL_GPS">Live Device GPS</button>
+              <span id="footer-gps-status">Location Verified</span>
             </div>
 
             <!-- Manual Barcode Fallback -->
-            <div style="display:flex; gap:0.4rem; align-items:center;">
-              <input type="text" id="manual-barcode-input" placeholder="Manual ID (e.g. SS40-EMP-1001)" class="form-control" style="width:200px; padding:0.4rem 0.6rem; font-size:0.78rem;" />
-              <button id="manual-submit-btn" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.78rem;">Submit</button>
+            <div class="terminal-manual-wrap">
+              <input type="text" id="manual-barcode-input" placeholder="Employee ID (e.g. SS40-EMP-1001)" class="form-control" />
+              <button id="manual-submit-btn" class="btn btn-primary">Submit</button>
             </div>
           </div>
 
         </div>
 
-        <!-- Right Column: Location Perimeter & Quick-Test Employee Shelf -->
+        <!-- Right Column: Break Punch Actions & Location Perimeter -->
         <div class="kiosk-sidebar">
 
-          <!-- Sidebar Corporate Header Branding -->
-          <div class="sidebar-brand-card">
-            <div class="sidebar-brand-inner">
-              <div class="sidebar-logo-frame">
-                <img src="/images/ss40-logo.png" alt="SS40 Network Private Limited" class="sidebar-logo-img" />
+          <!-- Quick Attendance & Break Management Card (Primary Action) -->
+          <div class="attendance-actions-card">
+            <div class="actions-card-header">
+              <h3>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Attendance & Break Punch
+              </h3>
+              <span id="kiosk-action-state-badge" class="action-state-badge">Ready</span>
+            </div>
+            <p class="actions-card-desc">Scan your card or select an action to mark attendance or breaks:</p>
+
+            <div class="quick-punch-grid">
+              <button class="action-punch-btn btn-checkin" data-action="CHECK_IN" title="Clock in for shift">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                <span>Punch In</span>
+              </button>
+              <button class="action-punch-btn btn-break" data-action="BREAK_START" title="Take a break (lunch/tea)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                <span>Take Break</span>
+              </button>
+              <button class="action-punch-btn btn-resume" data-action="BREAK_END" title="Resume shift from break">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Resume Work</span>
+              </button>
+              <button class="action-punch-btn btn-checkout" data-action="CHECK_OUT" title="Clock out and end shift">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Punch Out</span>
+              </button>
+            </div>
+
+            <!-- Last Punch Result Box -->
+            <div id="kiosk-last-punch-box" class="kiosk-last-result" style="display:none;">
+              <div class="result-top">
+                <span id="last-punch-title" class="result-title">Punch Recorded</span>
+                <span id="last-punch-time" class="result-time">00:00 AM</span>
               </div>
-              <div class="sidebar-brand-text">
-                <h2 class="sidebar-brand-title">SS40 <span class="brand-accent">NETWORK</span></h2>
-                <div class="sidebar-brand-subtitle">
-                  <span class="office-dot"></span>
-                  <span>Tirunelveli Incubation Centre HQ</span>
+              <div class="result-body">
+                <div id="last-punch-avatar" class="emp-avatar-sm" style="background-color: var(--teal-700);">S</div>
+                <div class="result-meta">
+                  <div id="last-punch-name" class="result-name">Employee Name</div>
+                  <div id="last-punch-desc" class="result-desc">Clocked In • Location Verified</div>
                 </div>
               </div>
             </div>
@@ -192,15 +195,15 @@
           <div class="geofence-card">
             <div class="geofence-card-header">
               <div class="geofence-card-title">
-                <span>📍</span> SS40 Geofence Perimeter
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Location & Geofence
               </div>
-              <span class="status-badge on-time">Strict Lock</span>
+              <span class="status-badge on-time">Within Perimeter</span>
             </div>
 
             <div class="geofence-meter-box">
               <div class="meter-stat-row">
                 <span id="kiosk-meter-dist" class="meter-stat-value">24m</span>
-                <span class="meter-stat-target">Allowed Radius: 150m</span>
+                <span class="meter-stat-target">Allowed: 150m radius</span>
               </div>
               <div class="geofence-bar-track">
                 <div id="kiosk-meter-bar" class="geofence-bar-fill" style="width: 16%;"></div>
@@ -213,10 +216,6 @@
                 <span class="val">Sree Puram, Tirunelveli</span>
               </div>
               <div class="coords-row">
-                <span>Office Coordinates:</span>
-                <span class="val" id="kiosk-office-coords">8.72851, 77.72744 (±150m)</span>
-              </div>
-              <div class="coords-row">
                 <span>Shift Schedule:</span>
                 <span class="val">09:30 AM - 06:30 PM</span>
               </div>
@@ -224,19 +223,6 @@
                 <span>Grace Window:</span>
                 <span class="val">15 Minutes (till 09:45 AM)</span>
               </div>
-            </div>
-          </div>
-
-          <!-- Quick Test Employee Badges Shelf -->
-          <div class="quick-test-shelf-card">
-            <div class="shelf-header">
-              <h3><span>👥</span> Sample Employee Badges</h3>
-              <span style="font-size:0.7rem; color:var(--teal-700); font-weight:700;">1-Click Demo</span>
-            </div>
-            <div class="shelf-subtitle">Click any employee below to simulate an instant badge scan:</div>
-            
-            <div id="test-badges-grid" class="test-badges-grid">
-              <!-- Dynamically populated from employees list -->
             </div>
           </div>
 
@@ -258,13 +244,16 @@
         </div>
         <div class="admin-action-tools">
           <button id="open-add-emp-btn" class="btn btn-primary">
-            <span>+</span> Add New Employee
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add New Employee</span>
           </button>
           <button id="export-csv-btn" class="btn btn-secondary">
-            <span>📥</span> Export CSV Report
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Export Report</span>
           </button>
           <button id="admin-logout-btn" class="btn btn-outline">
-            <span>🔒</span> Logout Admin
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Logout</span>
           </button>
         </div>
       </div>
@@ -272,37 +261,25 @@
       <!-- KPI Summary Cards Grid -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-top-row">
-            <span class="kpi-title">Staff Registered</span>
-            <div class="kpi-icon-box teal">👥</div>
-          </div>
+          <span class="kpi-title">Staff Registered</span>
           <div id="kpi-total-employees" class="kpi-main-number">8</div>
-          <div class="kpi-subtext">Across 3 business wings</div>
+          <div class="kpi-subtext">Across 4 business wings</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-top-row">
-            <span class="kpi-title">Present Today</span>
-            <div class="kpi-icon-box emerald">✓</div>
-          </div>
+          <span class="kpi-title">Present Today</span>
           <div id="kpi-present-today" class="kpi-main-number">8 (100%)</div>
           <div class="kpi-subtext">Verified attendance logs</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-top-row">
-            <span class="kpi-title">Currently Clocked In</span>
-            <div class="kpi-icon-box amber">⏱</div>
-          </div>
+          <span class="kpi-title">Currently Clocked In</span>
           <div id="kpi-clocked-in" class="kpi-main-number">4</div>
           <div class="kpi-subtext">Active on office floor</div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-top-row">
-            <span class="kpi-title">Punctuality Score</span>
-            <div class="kpi-icon-box teal">🎯</div>
-          </div>
+          <span class="kpi-title">Punctuality Score</span>
           <div id="kpi-punctuality-rate" class="kpi-main-number">94%</div>
           <div class="kpi-subtext">On-time & grace rate</div>
         </div>
@@ -311,22 +288,24 @@
       <!-- Admin Sub-Navigation Tabs -->
       <div class="admin-tabs-nav">
         <button class="admin-tab-btn active" data-tab="feed">
-          <span>📡</span> Live Activity Feed
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span>Live Activity Feed</span>
         </button>
         <button class="admin-tab-btn" data-tab="employees">
-          <span>👤</span> Employee Directory (CRUD)
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="11" cy="7" r="4"></circle></svg>
+          <span>Employee Directory</span>
         </button>
         <button class="admin-tab-btn" data-tab="logs">
-          <span>📋</span> Attendance Logs
-        </button>
-        <button class="admin-tab-btn" data-tab="heatmap">
-          <span>🔥</span> Monthly Heatmap & Streaks
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>Attendance Logs & Reports</span>
         </button>
         <button class="admin-tab-btn" data-tab="idcard">
-          <span>🪪</span> Digital ID Badge Studio
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line></svg>
+          <span>Digital ID Badge Studio</span>
         </button>
         <button class="admin-tab-btn" data-tab="settings">
-          <span>⚙</span> Geofence & Office Settings
+          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Office Geofence & Shift Policy</span>
         </button>
       </div>
 
@@ -339,7 +318,8 @@
               <p>Continuous verification feed with GPS validation and check-in timestamps</p>
             </div>
             <button class="btn btn-secondary" onclick="window.apiService.getTodayOverview().then(() => window.location.reload())" style="font-size:0.75rem;">
-              🔄 Refresh Stream
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              Refresh Stream
             </button>
           </div>
           <div class="table-responsive">
@@ -402,17 +382,50 @@
         </div>
       </div>
 
-      <!-- TAB 3: ATTENDANCE LOGS & REPORTS -->
+      <!-- TAB 3: ATTENDANCE LOGS & REPORTS (Requirement #2) -->
       <div id="pane-logs" class="admin-tab-pane">
+        
+        <!-- Attendance Report Generation Panel -->
+        <div class="card-box" style="margin-bottom:1.25rem;">
+          <div class="card-box-header">
+            <div class="card-box-title">
+              <h3>Official Attendance Report Generator</h3>
+              <p>Generate certified CSV attendance records for payroll, auditing, and department compliance</p>
+            </div>
+          </div>
+          <div class="report-controls-bar">
+            <div class="form-group" style="margin-bottom:0; min-width:260px; flex:1;">
+              <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select Department Filter</label>
+              <select id="report-dept-filter" class="form-control">
+                <option value="all">All Departments (Total Company)</option>
+                <option value="SS40 Digital Solutions">SS40 Digital Solutions</option>
+                <option value="SS40 SaaS Products">SS40 SaaS Products</option>
+                <option value="SS40 Tech Academics">SS40 Tech Academics</option>
+                <option value="Executive & Operations">Executive & Operations</option>
+              </select>
+            </div>
+            <div class="report-buttons-wrap">
+              <button id="export-total-report-btn" class="btn btn-secondary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download Total Company Report (CSV)
+              </button>
+              <button id="export-dept-report-btn" class="btn btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download Department Report (CSV)
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="card-box">
           <div class="card-box-header">
             <div class="card-box-title">
               <h3>Attendance Audit Logs & History</h3>
               <p>Complete historical logs with punch times, working hours, and compliance flags</p>
             </div>
-            <button id="download-csv-action-btn" class="btn btn-primary" onclick="window.open('/api/attendance/export', '_blank')">
-              📥 Download Full CSV
-            </button>
+            <div class="log-filter-status" id="log-current-filter-badge" style="font-size:0.75rem; color:var(--teal-700); font-weight:700;">
+              Showing: All Departments
+            </div>
           </div>
           <div class="table-responsive">
             <table class="data-table">
@@ -435,64 +448,38 @@
         </div>
       </div>
 
-      <!-- TAB 4: MONTHLY HEATMAP & STREAKS -->
-      <div id="pane-heatmap" class="admin-tab-pane">
-        <div class="card-box">
-          <div class="card-box-header">
-            <div class="card-box-title">
-              <h3>Monthly Attendance Consistency Matrix</h3>
-              <p>GitHub-style daily attendance intensity and punctuality performance</p>
-            </div>
-            <div style="font-size:0.8rem; font-weight:700; color:var(--teal-700);">
-              Overall Compliance: <span id="stat-punctuality-score">94%</span> (<span id="stat-total-logs">250+</span> Shifts)
-            </div>
-          </div>
-          
-          <div class="heatmap-container">
-            <div id="attendance-heatmap-grid" class="heatmap-grid">
-              <!-- Rendered via heatmap.js -->
-            </div>
-            <div class="heatmap-legend">
-              <span>Less Punctual</span>
-              <div class="legend-square level-0" style="background:#F1F5F9;"></div>
-              <div class="legend-square level-1" style="background:#A7F3D0;"></div>
-              <div class="legend-square level-2" style="background:#34D399;"></div>
-              <div class="legend-square level-3" style="background:#10B981;"></div>
-              <div class="legend-square level-4" style="background:#047857;"></div>
-              <span>Highly Punctual</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="card-box">
-          <div class="card-box-header">
-            <div class="card-box-title">
-              <h3>Top Punctual Performers & Streaks</h3>
-              <p>Employees with consecutive on-time attendance streaks</p>
-            </div>
-          </div>
-          <div id="top-streaks-container" class="streaks-grid">
-            <!-- Populated via heatmap.js -->
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 5: DIGITAL ID BADGE STUDIO -->
+      <!-- TAB 5: DIGITAL ID BADGE STUDIO (Requirement #3) -->
       <div id="pane-idcard" class="admin-tab-pane">
         <div class="card-box">
           <div class="card-box-header">
             <div class="card-box-title">
-              <h3>SS40 Network Official ID Badge Studio</h3>
-              <p>Preview and print employee badges with high-resolution Code-128 barcodes</p>
+              <h3>Official SS40 Digital ID Badge Studio</h3>
+              <p>Dynamic identity badge generator with scannable Code-128 barcode and verified credentials</p>
             </div>
-            <button class="btn btn-primary id-badge-print-tools" onclick="window.idCardStudio.printBadge()">
-              🖨 Print ID Badge
+            <button class="btn btn-primary" onclick="window.idCardStudio.printBadge()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              Print ID Badge
             </button>
+          </div>
+
+          <!-- Dynamic Employee Selector Toolbar (Requirement #3) -->
+          <div class="id-badge-selector-toolbar">
+            <div class="form-group" style="margin-bottom:0; flex:1; min-width:260px;">
+              <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select Personnel</label>
+              <select id="id-badge-employee-select" class="form-control" style="font-weight:600;">
+                <!-- Populated dynamically from employees database -->
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0; width:240px;">
+              <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Quick Filter by Name / ID</label>
+              <input type="text" id="id-badge-search-input" placeholder="Search employee..." class="form-control" />
+            </div>
           </div>
           
           <div class="id-badge-container">
             <div id="id-badge-preview-zone">
-              <!-- Populated by idcard.js -->
+              <!-- Dynamically populated by idcard.js -->
             </div>
           </div>
         </div>
@@ -542,10 +529,11 @@
               </div>
             </div>
 
-            <div style="display:flex; gap:0.85rem; margin-top:1.5rem;">
+            <div style="display:flex; gap:0.85rem; margin-top:1.5rem; flex-wrap:wrap;">
               <button type="submit" class="btn btn-primary">Save Configuration</button>
               <button type="button" id="sync-current-gps-btn" class="btn btn-secondary">
-                📍 Set Office to My Current Device GPS
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                <span>Set Office to Device GPS</span>
               </button>
             </div>
           </form>
@@ -595,8 +583,7 @@
         </div>
 
         <div class="geofence-alert-actions">
-          <button id="close-geo-alert-btn" class="alert-action-btn primary">Acknowledge</button>
-          <button id="geo-alert-simulate-inside" class="alert-action-btn secondary">Test Inside Office (Demo)</button>
+          <button id="close-geo-alert-btn" class="alert-action-btn primary" style="width:100%;">Acknowledge</button>
         </div>
       </div>
     </div>
@@ -608,7 +595,9 @@
   <div id="punch-modal" class="punch-modal-backdrop">
     <div class="punch-card-wrapper">
       <div id="punch-modal-banner" class="punch-header-banner check-in">
-        <div id="punch-modal-icon" class="punch-icon-badge">✓</div>
+        <div id="punch-modal-icon" class="punch-icon-badge">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
         <h2 id="punch-modal-title">ATTENDANCE CLOCKED IN</h2>
         <p id="punch-modal-sub">Welcome to SS40 Network Private Limited</p>
       </div>
@@ -638,6 +627,29 @@
             <div class="label">Total Working Duration</div>
             <div id="punch-modal-hours" class="value">8.95 hrs</div>
           </div>
+          <div id="punch-modal-break-wrap" class="punch-metric-tile" style="grid-column: 1 / -1; display:none;">
+            <div class="label">Break Time</div>
+            <div id="punch-modal-break" class="value">0 mins</div>
+          </div>
+        </div>
+
+        <!-- Interactive Choice when already Clocked In (Take Break vs Clock Out) -->
+        <div id="punch-modal-choice-wrap" style="display:none; margin: 1rem 0;">
+          <p style="font-size:0.85rem; color:var(--text-main); font-weight:600; text-align:center; margin-bottom:0.75rem;">Select your shift action:</p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem;">
+            <button id="modal-action-break-btn" class="btn btn-secondary" style="justify-content:center; padding:0.65rem; font-weight:600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+              Take Break
+            </button>
+            <button id="modal-action-checkout-btn" class="btn btn-primary" style="justify-content:center; padding:0.65rem; font-weight:600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Punch Out
+            </button>
+          </div>
+          <button id="modal-action-resume-btn" class="btn btn-primary" style="display:none; width:100%; justify-content:center; margin-top:0.6rem; padding:0.65rem; font-weight:600;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Resume Work from Break
+          </button>
         </div>
 
         <p id="punch-modal-greeting" style="font-size:0.84rem; color:var(--text-muted); text-align:center; margin-bottom:1.25rem;">
@@ -670,11 +682,8 @@
             <label>Password</label>
             <input type="password" id="login-password" class="form-control" value="admin123" required />
           </div>
-          <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:0.6rem;">
-            <button type="submit" class="btn btn-primary" style="justify-content:center;">Authenticate Session</button>
-            <button type="button" id="demo-admin-login-btn" class="btn btn-secondary" style="justify-content:center;">
-              ⚡ Quick Demo 1-Click Login
-            </button>
+          <div style="margin-top:1.5rem;">
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Authenticate Session</button>
           </div>
         </form>
       </div>
@@ -770,7 +779,7 @@
           </div>
           <div class="kpi-card" style="padding:0.75rem;">
             <div class="kpi-title" style="font-size:0.68rem;">Current Streak</div>
-            <div id="hist-stat-streak" class="kpi-main-number" style="font-size:1.3rem;">🔥 14</div>
+            <div id="hist-stat-streak" class="kpi-main-number" style="font-size:1.3rem;">14 Days</div>
           </div>
           <div class="kpi-card" style="padding:0.75rem;">
             <div class="kpi-title" style="font-size:0.68rem;">Avg Hours</div>
@@ -812,8 +821,47 @@
           <!-- Populated by idcard.js -->
         </div>
         <button id="print-badge-modal-btn" class="btn btn-primary" style="width:100%; justify-content:center;">
-          🖨 Print / Save Badge
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print / Save Badge
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 7: CONFIRM PERMANENT EMPLOYEE DELETION
+       ========================================================================= -->
+  <div id="delete-employee-modal" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 440px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <div style="width:30px; height:30px; border-radius:50%; background:var(--rose-50); display:flex; align-items:center; justify-content:center; color:var(--rose-600); flex-shrink:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:1.05rem;">Confirm Permanent Deletion</h3>
+            <p style="margin:0; font-size:0.72rem; color:var(--text-muted);">Administrative record purge</p>
+          </div>
+        </div>
+        <button id="close-delete-emp-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="padding-top:0.75rem;">
+        <p style="font-size:0.85rem; color:var(--text-main); margin-bottom:1rem; line-height:1.5;">
+          Are you sure you want to permanently remove employee <strong id="delete-emp-name-target" style="color:var(--navy-900);"></strong> (<span id="delete-emp-id-target" style="font-family:monospace; font-weight:700; color:var(--rose-600);"></span>) from the organization records?
+        </p>
+        <div style="background:var(--rose-50); border:1px solid var(--rose-border); border-radius:var(--radius-md); padding:0.85rem; margin-bottom:1.25rem;">
+          <div style="font-size:0.72rem; font-weight:800; color:var(--rose-600); letter-spacing:0.5px; margin-bottom:0.25rem;">IRREVERSIBLE ACTION</div>
+          <div style="font-size:0.76rem; color:#7F1D1D; line-height:1.45;">
+            This operation will permanently purge this employee's credentials, active barcode, and all historical attendance logs from the database.
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+          <button id="cancel-delete-emp-btn" class="btn btn-secondary" style="padding:0.48rem 1rem;">Cancel</button>
+          <button id="confirm-delete-emp-btn" class="btn btn-danger" style="padding:0.48rem 1.15rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Confirm Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>

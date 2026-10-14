@@ -182,6 +182,22 @@
       "status": "Active",
       "joinedDate": "2026-10-10",
       "emergencyContact": "+91 8300591750"
+    },
+    {
+      "id": "SS40-EMP-1011",
+      "name": "Riya",
+      "email": "riya@ss40network.com",
+      "department": "SS40 SaaS Products",
+      "wing": "Products",
+      "designation": "Tech Engineer",
+      "barcode": "SS40-EMP-1011",
+      "phone": "+91 94421 88201",
+      "bloodGroup": "O+",
+      "shift": "09:30 - 18:30",
+      "avatarColor": "#7C3AED",
+      "status": "Active",
+      "joinedDate": "2026-10-10",
+      "emergencyContact": "+91 94421 88299"
     }
   ],
   "attendance": [
