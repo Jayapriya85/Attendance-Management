@@ -76,35 +76,71 @@ class BarcodeScannerEngine {
   async startCamera(containerId = 'camera-preview') {
     if (this.isCameraRunning) return true;
 
-    // Reset previous instance if needed
+    // Update UI indicator to starting state
+    const toggleLabel = document.getElementById('camera-toggle-label');
+    if (toggleLabel) toggleLabel.textContent = 'Connecting...';
+    this.updateHintText('Initializing camera feed, please wait...', false);
+
+    // 1. Detect device cameras
+    let chosenCamera = null;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    try {
+      this.availableCameras = await Html5Qrcode.getCameras();
+      if (this.availableCameras && this.availableCameras.length > 0) {
+        // Mobile preference: rear/environment camera
+        const rearCam = this.availableCameras.find(c => /back|rear|environment/i.test(c.label || ''));
+        if (isMobile && rearCam) {
+          this.currentCameraId = rearCam.id;
+          chosenCamera = rearCam.id;
+        } else {
+          // Default to first detected hardware camera (front webcam on laptop / desktop)
+          this.currentCameraId = this.availableCameras[0].id;
+          chosenCamera = this.availableCameras[0].id;
+        }
+        console.log(`[Scanner] Selected hardware camera: ${chosenCamera}`);
+      }
+    } catch (enumErr) {
+      console.warn('[Scanner] Camera enumeration note:', enumErr);
+    }
+
+    // Fallback camera specification if enumeration was empty or not yet permitted
+    if (!chosenCamera) {
+      chosenCamera = { facingMode: isMobile ? 'environment' : 'user' };
+    }
+
+    // 2. Clean up any previous scanner session
     try {
       if (this.html5QrCode) {
-        try { await this.html5QrCode.stop(); } catch(e) {}
-        try { await this.html5QrCode.clear(); } catch(e) {}
+        try { await this.html5QrCode.stop(); } catch (e) {}
+        try { await this.html5QrCode.clear(); } catch (e) {}
+        this.html5QrCode = null;
       }
     } catch (e) {}
 
+    // Clear the container
+    const previewContainer = document.getElementById(containerId);
+    if (previewContainer) {
+      previewContainer.innerHTML = '';
+    }
+
+    // 3. Create fresh Html5Qrcode instance
     try {
       this.html5QrCode = new Html5Qrcode(containerId, {
         formatsToSupport: this.getSupportedFormatsList(),
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+        verbose: false
       });
-    } catch (e) {}
-
-    // Target barcode formats
-    const formats = this.getSupportedFormatsList();
+    } catch (instErr) {
+      console.error('[Scanner] Html5Qrcode instantiation error:', instErr);
+      this.renderCameraState(containerId, 'Scanner initialization failed. Please reload.');
+      this.updateToggleButtonState(false);
+      return false;
+    }
 
     const config = {
       fps: 15,
-      qrbox: (viewfinderWidth, viewfinderHeight) => {
-        const w = Math.min(Math.floor(viewfinderWidth * 0.90), 480);
-        const h = Math.min(Math.floor(viewfinderHeight * 0.70), 260);
-        return { width: Math.max(w, 220), height: Math.max(h, 150) };
-      },
-      formatsToSupport: formats,
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
-      }
+      qrbox: { width: 280, height: 160 }
     };
 
     const onScan = (decodedText, decodedResult) => {
@@ -112,104 +148,62 @@ class BarcodeScannerEngine {
     };
 
     const onError = (errorMessage) => {
-      // Normal frame-by-frame analysis
+      // Frame analysis
     };
 
-    const onCameraSuccess = (label) => {
+    const markSuccess = (label) => {
       this.isCameraRunning = true;
       this.updateAimOverlay(true);
       this.updateToggleButtonState(true);
       this.updateHintText('Scanner Active: Position ID barcode 15&ndash;20cm from camera', false);
       this.startGuidanceTimer();
-      console.log(`[Scanner] Camera started: ${label}`);
-      // Launch hardware-accelerated frame scanner
+      console.log(`[Scanner] Camera stream active via: ${label}`);
       this.startLiveBarcodeDetector();
     };
 
-    const hdConstraints = {
-      width: { min: 640, ideal: 1280, max: 1920 },
-      height: { min: 480, ideal: 720, max: 1080 }
-    };
-
-    // Strategy 1: Attempt Environment (Rear) Camera (Mobile/Tablet) in HD
+    // 4. Start stream with primary selected camera
     try {
-      await this.html5QrCode.start(
-        { facingMode: "environment", ...hdConstraints },
-        config,
-        onScan,
-        onError
-      );
-      onCameraSuccess('facingMode: environment (HD)');
+      await this.html5QrCode.start(chosenCamera, config, onScan, onError);
+      markSuccess(typeof chosenCamera === 'string' ? chosenCamera : JSON.stringify(chosenCamera));
       return true;
-    } catch (errEnv) {
-      console.info('[Scanner] Rear HD camera not available, attempting user HD camera...', errEnv.message);
-    }
+    } catch (primaryErr) {
+      console.warn('[Scanner] Primary camera start attempt failed, trying basic user camera fallback...', primaryErr);
 
-    // Strategy 2: Attempt User (Front) Camera (Laptops / Webcams) in HD
-    try {
-      await this.html5QrCode.start(
-        { facingMode: "user", ...hdConstraints },
-        config,
-        onScan,
-        onError
-      );
-      onCameraSuccess('facingMode: user (HD)');
-      return true;
-    } catch (errUser) {
-      console.info('[Scanner] User HD camera not available, querying device list...', errUser.message);
-    }
+      // Clean and recreate instance for safe secondary attempt
+      try {
+        if (this.html5QrCode) {
+          try { await this.html5QrCode.stop(); } catch (e) {}
+          try { await this.html5QrCode.clear(); } catch (e) {}
+          this.html5QrCode = null;
+        }
+      } catch (e) {}
 
-    // Strategy 3: Standard resolution fallbacks
-    try {
-      await this.html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        onScan,
-        onError
-      );
-      onCameraSuccess('facingMode: environment (SD)');
-      return true;
-    } catch (e) {}
-
-    try {
-      await this.html5QrCode.start(
-        { facingMode: "user" },
-        config,
-        onScan,
-        onError
-      );
-      onCameraSuccess('facingMode: user (SD)');
-      return true;
-    } catch (e) {}
-
-    // Strategy 4: Enumerate hardware cameras and attempt first detected device
-    try {
-      this.availableCameras = await Html5Qrcode.getCameras();
-      if (this.availableCameras && this.availableCameras.length > 0) {
-        this.currentCameraId = this.availableCameras[0].id;
-        await this.html5QrCode.start(
-          this.currentCameraId,
-          config,
-          onScan,
-          onError
-        );
-        onCameraSuccess(`device ID: ${this.currentCameraId}`);
-        return true;
+      if (previewContainer) {
+        previewContainer.innerHTML = '';
       }
-    } catch (errList) {
-      console.warn('[Scanner] Camera enumeration error:', errList.message);
-    }
 
-    // If all camera starts failed (e.g. permission prompt dismissed or no webcam connected)
-    this.isCameraRunning = false;
-    this.stopLiveBarcodeDetector();
-    this.updateAimOverlay(false);
-    this.updateToggleButtonState(false);
-    this.renderCameraState(
-      containerId,
-      'Camera is paused or permission is needed. Click "Start Camera" to scan your ID card.'
-    );
-    return false;
+      try {
+        this.html5QrCode = new Html5Qrcode(containerId, {
+          formatsToSupport: this.getSupportedFormatsList(),
+          verbose: false
+        });
+
+        await this.html5QrCode.start({ facingMode: 'user' }, config, onScan, onError);
+        markSuccess('User camera (Fallback)');
+        return true;
+      } catch (fallbackErr) {
+        console.error('[Scanner] All camera start attempts failed:', fallbackErr);
+        this.isCameraRunning = false;
+        this.stopLiveBarcodeDetector();
+        this.updateAimOverlay(false);
+        this.updateToggleButtonState(false);
+        this.renderCameraState(
+          containerId,
+          'Camera access failed or permission was blocked. Please permit camera in your browser address bar.'
+        );
+        return false;
+      }
+    }
   }
 
   startLiveBarcodeDetector() {
@@ -292,6 +286,7 @@ class BarcodeScannerEngine {
     this.isCameraRunning = false;
     this.updateAimOverlay(false);
     this.updateToggleButtonState(false);
+    this.renderCameraState('camera-preview', 'Camera is paused. Click "Start Camera" to scan your ID card.');
     // Reset illumination visuals
     this.isTorchOn = false;
     const torchBtn = document.getElementById('toggle-torch-btn');

@@ -397,8 +397,9 @@ app.post('/api/attendance/punch', async (req, res) => {
       settings.officeLng
     );
 
-    // Strict radius check
-    const isInside = distanceMeters <= settings.radiusMeters;
+    // Strict radius check with development demoMode override option
+    const isForceInside = settings.demoMode === 'FORCE_INSIDE';
+    const isInside = isForceInside || (distanceMeters <= settings.radiusMeters);
 
     if (!isInside) {
       return res.status(403).json({

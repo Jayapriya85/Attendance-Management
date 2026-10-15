@@ -236,6 +236,34 @@
   ],
   "attendance": [
     {
+      "id": "ATT-20261015-5784",
+      "employeeId": "SS40-EMP-1002",
+      "employeeName": "Priyadharshini K.",
+      "department": "SS40 Digital Solutions",
+      "designation": "Senior Full-Stack Engineer",
+      "date": "2026-10-15",
+      "checkIn": "2026-10-15T05:47:25.782Z",
+      "checkInTime": "11:17 AM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "breakStart": null,
+      "breakStartTime": null,
+      "breakEnd": null,
+      "breakEndTime": null,
+      "breakMinutes": 0,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728512,
+        "lng": 77.727438,
+        "distanceMeters": 0,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli"
+      }
+    },
+    {
       "id": "ATT-20261015-9603",
       "employeeId": "SS40-EMP-1001",
       "employeeName": "Selvakumar S.",

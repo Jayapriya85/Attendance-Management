@@ -249,8 +249,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.geofenceMgr.officeCoords.lng
     );
 
-    // If outside the allowed perimeter, block attendance check-in
-    if (officeDist > window.geofenceMgr.allowedRadiusMeters) {
+    const isForceInside = window.geofenceMgr.demoMode === 'FORCE_INSIDE' || cachedSettings?.demoMode === 'FORCE_INSIDE';
+
+    // If outside the allowed perimeter and not in FORCE_INSIDE mode, block attendance check-in
+    if (!isForceInside && officeDist > window.geofenceMgr.allowedRadiusMeters) {
       const emp = cachedEmployees ? cachedEmployees.find(e => e.id === cleanId || e.barcode === cleanId) : null;
       window.soundFX.playWarningTone();
       showGeofenceWarningModal({
