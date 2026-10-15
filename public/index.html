@@ -14,6 +14,12 @@
   <!-- Vendor Libraries -->
   <script src="/vendor/jsbarcode.min.js"></script>
   <script src="/vendor/html5-qrcode.min.js"></script>
+  <script>
+    if (typeof Html5Qrcode === 'undefined') {
+      console.warn('Loading Html5Qrcode fallback from CDN...');
+      document.write('<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"><\/script>');
+    }
+  </script>
 
   <!-- Application CSS -->
   <link rel="stylesheet" href="/css/style.css" />
@@ -26,15 +32,18 @@
   <header class="app-header">
     <div class="header-container">
       
-      <!-- Brand & Office Indicator -->
+      <!-- Left: Back Button & Brand Indicator -->
       <div class="brand-wrapper">
+        <button id="header-back-btn" class="header-back-btn" title="Back to Employee Check-in" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
         <div class="ss40-logo-badge" title="SS40 Network Private Limited">
           <img src="/images/ss40-logo.png" alt="SS40 Network" class="header-logo-img" />
         </div>
         <div class="brand-text">
           <h1>SS40 <span class="brand-accent">NETWORK</span></h1>
           <div class="brand-tagline">
-            <span>Municipal Corporation Incubation Centre, Tirunelveli</span>
+            <span id="header-brand-tagline">Operations Command Center</span>
           </div>
         </div>
       </div>
@@ -54,10 +63,18 @@
       <!-- Right: Live Clock & Quick Controls -->
       <div class="header-right">
 
-        <!-- Live Clock -->
-        <div class="header-clock">
-          <div id="live-clock">00:00:00 AM</div>
-          <div id="live-date" class="header-clock-date">Mon, Oct 09, 2026</div>
+        <!-- Live Clock Pill -->
+        <div class="header-clock" title="Indian Standard Time (IST)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; opacity:0.8;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span id="live-clock">00:00:00 am</span>
+        </div>
+
+        <!-- Admin Quick Actions (Visible when in Admin view) -->
+        <div id="header-admin-actions" class="header-admin-tools" style="display:none;">
+          <button id="header-logout-btn" class="btn btn-outline-sm" title="Sign out of admin control center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Logout</span>
+          </button>
         </div>
 
         <!-- Quick Controls -->
@@ -104,26 +121,37 @@
           <div id="camera-viewport-wrap" class="camera-viewport-container">
             <div id="camera-preview"></div>
 
-            <!-- Aim Frame Overlay -->
+            <!-- Aim Frame Overlay with Animated Scanning Laser -->
             <div class="scan-aim-overlay">
+              <div class="laser-scanner-line"></div>
               <div class="aim-frame">
                 <div class="aim-corner aim-tl"></div>
                 <div class="aim-corner aim-tr"></div>
                 <div class="aim-corner aim-bl"></div>
                 <div class="aim-corner aim-br"></div>
               </div>
-              <div class="aim-caption">Position barcode in frame</div>
+              <div class="aim-caption">Position ID barcode in frame</div>
             </div>
 
             <!-- Camera Controls -->
             <div class="camera-controls-bar">
-              <button id="toggle-torch-btn" class="cam-ctrl-btn" title="Toggle Lighting">
+              <button id="toggle-torch-btn" class="cam-ctrl-btn" title="Toggle Lighting / High-Contrast Mode">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="23"></line><circle cx="12" cy="12" r="5"></circle><line x1="4.22" y1="4.22" x2="7.05" y2="7.05"></line><line x1="16.95" y1="16.95" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="7.05" y2="16.95"></line><line x1="16.95" y1="7.05" x2="19.78" y2="4.22"></line></svg>
               </button>
-              <button id="switch-camera-btn" class="cam-ctrl-btn" title="Switch Camera Device">
+              <button id="switch-camera-btn" class="cam-ctrl-btn" title="Switch Camera Device / Refresh Stream">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
               </button>
+              <button id="upload-badge-img-btn" class="cam-ctrl-btn" title="Scan Barcode from Photo or Saved Badge File">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </button>
+              <input type="file" id="badge-photo-input" accept="image/*" style="display:none;" />
             </div>
+          </div>
+
+          <!-- Camera Live Helper & Tip Banner -->
+          <div id="camera-scan-hint" class="camera-scan-hint">
+            <span class="hint-dot"></span>
+            <span id="camera-hint-text">Scanner Active: Hold ID card 15&ndash;20cm from camera</span>
           </div>
 
           <!-- Terminal Footer: Status Indicator & Manual Fallback -->
@@ -236,112 +264,168 @@
          ======================================================================= -->
     <section id="view-admin" class="view-section">
       
-      <!-- Admin Header Toolbar -->
-      <div class="admin-header-toolbar">
-        <div class="admin-title-block">
-          <h2>Administrative Control Center</h2>
-          <p>Real-time corporate oversight, employee identity credentials, and compliance reports</p>
-        </div>
-        <div class="admin-action-tools">
-          <button id="open-add-emp-btn" class="btn btn-primary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>Add New Employee</span>
-          </button>
-          <button id="export-csv-btn" class="btn btn-secondary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>Export Report</span>
-          </button>
-          <button id="admin-logout-btn" class="btn btn-outline">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            <span>Logout</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- KPI Summary Cards Grid -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <span class="kpi-title">Staff Registered</span>
-          <div id="kpi-total-employees" class="kpi-main-number">8</div>
-          <div class="kpi-subtext">Across 4 business wings</div>
-        </div>
-
-        <div class="kpi-card">
-          <span class="kpi-title">Present Today</span>
-          <div id="kpi-present-today" class="kpi-main-number">8 (100%)</div>
-          <div class="kpi-subtext">Verified attendance logs</div>
-        </div>
-
-        <div class="kpi-card">
-          <span class="kpi-title">Currently Clocked In</span>
-          <div id="kpi-clocked-in" class="kpi-main-number">4</div>
-          <div class="kpi-subtext">Active on office floor</div>
-        </div>
-
-        <div class="kpi-card">
-          <span class="kpi-title">Punctuality Score</span>
-          <div id="kpi-punctuality-rate" class="kpi-main-number">94%</div>
-          <div class="kpi-subtext">On-time & grace rate</div>
-        </div>
-      </div>
-
-      <!-- Admin Sub-Navigation Tabs -->
+      <!-- Admin Sub-Navigation Tabs (Matching Reference Image 1 & 2) -->
       <div class="admin-tabs-nav">
-        <button class="admin-tab-btn active" data-tab="feed">
+        <button class="admin-tab-btn active" data-tab="dashboard">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-          <span>Live Activity Feed</span>
+          <span>Dashboard</span>
+          <span class="tab-live-badge">LIVE</span>
         </button>
         <button class="admin-tab-btn" data-tab="employees">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="11" cy="7" r="4"></circle></svg>
-          <span>Employee Directory</span>
+          <span>Employees</span>
         </button>
         <button class="admin-tab-btn" data-tab="logs">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          <span>Attendance Logs & Reports</span>
+          <span>Reports</span>
         </button>
         <button class="admin-tab-btn" data-tab="idcard">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line></svg>
-          <span>Digital ID Badge Studio</span>
+          <span>ID Badge Studio</span>
         </button>
         <button class="admin-tab-btn" data-tab="settings">
           <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          <span>Office Geofence & Shift Policy</span>
+          <span>Settings &amp; Security</span>
         </button>
       </div>
 
-      <!-- TAB 1: LIVE ACTIVITY FEED -->
-      <div id="pane-feed" class="admin-tab-pane active">
-        <div class="card-box">
-          <div class="card-box-header">
-            <div class="card-box-title">
-              <h3>Today's Real-Time Attendance Stream</h3>
-              <p>Continuous verification feed with GPS validation and check-in timestamps</p>
-            </div>
-            <button class="btn btn-secondary" onclick="window.apiService.getTodayOverview().then(() => window.location.reload())" style="font-size:0.75rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-              Refresh Stream
+      <!-- TAB 1: ATTENDANCE DASHBOARD (Matching Reference Image 1) -->
+      <div id="pane-dashboard" class="admin-tab-pane active">
+        
+        <!-- Dashboard Header -->
+        <div class="dash-header-bar">
+          <div class="dash-title-block">
+            <h2>Attendance Dashboard</h2>
+            <p>Real-time daily shift tracking &amp; workforce analytics</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <button id="dashboard-refresh-btn" class="btn btn-secondary btn-sm" title="Refresh real-time shift analytics">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              <span>Refresh Live Data</span>
+            </button>
+            <button id="dash-add-emp-btn" class="btn btn-primary btn-sm" title="Register a new employee" style="display:inline-flex; align-items:center; gap:0.35rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add Employee</span>
             </button>
           </div>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Punch In</th>
-                  <th>Punch Out</th>
-                  <th>Hours Worked</th>
-                  <th>Status Flag</th>
-                  <th>Method</th>
-                  <th>Geofence Verification</th>
-                </tr>
-              </thead>
-              <tbody id="live-feed-tbody">
-                <!-- Dynamically populated -->
-              </tbody>
-            </table>
+        </div>
+
+        <!-- 6 Core Shift Status KPI Cards Grid (Matching Reference Image 1) -->
+        <div class="dash-status-grid">
+          
+          <!-- Card 1: Total Staff -->
+          <div class="dash-stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-title">Total Staff</span>
+              <div class="stat-card-icon icon-blue">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+            </div>
+            <div id="stat-total-staff" class="stat-card-number">0</div>
+            <div class="stat-card-sub">Registered employees</div>
+          </div>
+
+          <!-- Card 2: Logged In -->
+          <div class="dash-stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-title">Logged In</span>
+              <div class="stat-card-icon icon-green">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+            </div>
+            <div id="stat-logged-in" class="stat-card-number text-emerald">0</div>
+            <div class="stat-card-sub text-emerald">Active at desk</div>
+          </div>
+
+          <!-- Card 3: On Break -->
+          <div class="dash-stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-title">On Break</span>
+              <div class="stat-card-icon icon-amber">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+              </div>
+            </div>
+            <div id="stat-on-break" class="stat-card-number text-amber">0</div>
+            <div class="stat-card-sub">Tea / Coffee</div>
+          </div>
+
+          <!-- Card 4: On Lunch -->
+          <div class="dash-stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-title">On Lunch</span>
+              <div class="stat-card-icon icon-orange">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2v20M2 2v6a4 4 0 0 0 4 4v10M6 2v6M10 2v6a4 4 0 0 1-4 4"></path></svg>
+              </div>
+            </div>
+            <div id="stat-on-lunch" class="stat-card-number text-orange">0</div>
+            <div class="stat-card-sub">Lunch hour</div>
+          </div>
+
+          <!-- Card 5: Logged Out -->
+          <div class="dash-stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-title">Logged Out</span>
+              <div class="stat-card-icon icon-slate">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              </div>
+            </div>
+            <div id="stat-logged-out" class="stat-card-number text-slate">0</div>
+            <div class="stat-card-sub">Shift completed</div>
+          </div>
+
+          <!-- Card 6: Not Logged In -->
+          <div class="dash-stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-title">Not Logged In</span>
+              <div class="stat-card-icon icon-rose">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+              </div>
+            </div>
+            <div id="stat-not-logged-in" class="stat-card-number text-rose">0</div>
+            <div class="stat-card-sub">Pending check-in</div>
+          </div>
+
+        </div>
+
+        <!-- Search & Filter Controls (Matching Reference Image 1) -->
+        <div class="dash-filter-container">
+          <div class="dash-search-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="dashboard-search-input" placeholder="Search employee, code, role..." class="form-control" />
+          </div>
+          <div class="dash-selects-row">
+            <select id="dashboard-dept-filter" class="form-control">
+              <option value="">All Departments</option>
+              <option value="SS40 Digital Solutions">SS40 Digital Solutions</option>
+              <option value="SS40 SaaS Products">SS40 SaaS Products</option>
+              <option value="SS40 Tech Academics">SS40 Tech Academics</option>
+              <option value="Executive & Operations">Executive &amp; Operations</option>
+            </select>
+            <select id="dashboard-status-filter" class="form-control">
+              <option value="">All Statuses</option>
+              <option value="LOGGED_IN">Logged In</option>
+              <option value="ON_BREAK">On Break</option>
+              <option value="ON_LUNCH">On Lunch</option>
+              <option value="LOGGED_OUT">Logged Out</option>
+              <option value="NOT_LOGGED_IN">Not Logged In</option>
+            </select>
           </div>
         </div>
+
+        <!-- Live Attendance List / Stream Card -->
+        <div class="card-box" style="margin-top: 1rem;">
+          <div id="dashboard-empty-state" class="dash-empty-state" style="display:none;">
+            No employees match the selected criteria.
+          </div>
+          <div id="dashboard-roster-list" class="dash-roster-list">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
       </div>
+
+      <!-- Hidden pane-feed alias for backwards compatibility -->
+      <div id="pane-feed" class="admin-tab-pane" style="display:none !important;"></div>
 
       <!-- TAB 2: EMPLOYEE MANAGEMENT (CRUD) -->
       <div id="pane-employees" class="admin-tab-pane">
@@ -360,6 +444,10 @@
                 <option value="Academics">SS40 Tech Academics</option>
                 <option value="Operations">Operations & HR</option>
               </select>
+              <button id="open-add-emp-btn" class="btn btn-primary" title="Register a new employee" style="display:inline-flex; align-items:center; gap:0.4rem; white-space:nowrap;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Add Employee</span>
+              </button>
             </div>
           </div>
           <div class="table-responsive">
@@ -485,58 +573,199 @@
         </div>
       </div>
 
-      <!-- TAB 6: GEOFENCE & OFFICE SETTINGS -->
+      <!-- TAB 5: SYSTEM SETTINGS & SECURITY (Matching Reference Image 2) -->
       <div id="pane-settings" class="admin-tab-pane">
-        <div class="card-box">
-          <div class="card-box-header">
-            <div class="card-box-title">
-              <h3>Office Geofence & Shift Policy Parameters</h3>
-              <p>Configure exact headquarters GPS coordinates, security radius, and grace thresholds</p>
+        
+        <div class="settings-page-header">
+          <div class="settings-header-title">
+            <h2>System Settings &amp; Security</h2>
+            <p>Capture office GPS location, manage administrator credentials, and configure shift rules.</p>
+          </div>
+          <div class="settings-header-badge">
+            <span class="live-pulse-dot"></span>
+            <span>Security Engine Active</span>
+          </div>
+        </div>
+
+        <div class="settings-two-col-grid">
+          
+          <!-- Card 1: Office Location & GPS Geofence -->
+          <div class="card-box settings-card">
+            <div class="settings-card-header">
+              <div class="settings-card-icon icon-teal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+              <div class="settings-card-title">
+                <h3>Office Location &amp; GPS Geofence</h3>
+                <p>Set company physical coordinates for employee attendance verification.</p>
+              </div>
+            </div>
+
+            <!-- One-Tap Office Location Lock Highlight Banner -->
+            <div class="one-tap-location-banner">
+              <div class="banner-header-row">
+                <div class="banner-title">One-Tap Office Location Lock</div>
+                <span class="banner-tag">Instant Sync</span>
+              </div>
+              <p class="banner-sub">Stand in the office and click below to store current GPS coordinates automatically.</p>
+              <button id="btn-use-current-gps" type="button" class="btn-teal-lock" title="Detect device coordinates via GPS">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                <span>Use My Current Location as Office Location</span>
+              </button>
+              <div id="gps-lock-readout" class="gps-readout-pill" style="display:none;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                <span id="gps-lock-coords">Detected: --</span>
+              </div>
+            </div>
+
+            <form id="geofence-settings-form" class="settings-card-form">
+              <div class="form-group">
+                <label for="setting-office-name">Office Name</label>
+                <input type="text" id="setting-office-name" class="form-control" placeholder="SS40 Network Main Office" required />
+              </div>
+
+              <div class="form-group">
+                <label for="setting-office-address">Office Address</label>
+                <input type="text" id="setting-office-address" class="form-control" placeholder="1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli" required />
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="setting-office-lat">Latitude</label>
+                  <input type="number" step="any" id="setting-office-lat" class="form-control" placeholder="8.728512" required />
+                </div>
+                <div class="form-group">
+                  <label for="setting-office-lng">Longitude</label>
+                  <input type="number" step="any" id="setting-office-lng" class="form-control" placeholder="77.727438" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label for="setting-radius">Allowed Attendance Radius (Meters)</label>
+                  <span id="radius-preview-tag" class="setting-chip-badge">150m</span>
+                </div>
+                <input type="number" id="setting-radius" class="form-control" min="20" max="5000" placeholder="150" required />
+                <span class="form-helper-text">Employees must be within this radius of the office to mark attendance. Default: 100–150 meters.</span>
+              </div>
+
+              <div class="form-submit-row">
+                <button id="btn-save-geofence" type="submit" class="btn btn-navy-full">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  Save Geofence Settings
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Card 2: Change Admin Password -->
+          <div class="card-box settings-card">
+            <div class="settings-card-header">
+              <div class="settings-card-icon icon-teal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <div class="settings-card-title">
+                <h3>Change Admin Password</h3>
+                <p>Enter your current password to set a new administrator password.</p>
+              </div>
+            </div>
+
+            <!-- Security Policy Card -->
+            <div class="security-policy-banner">
+              <div class="sec-policy-header">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>Credential Protection Policy</span>
+              </div>
+              <p class="sec-policy-sub">Passphrase must be at least 6 characters. Changing credentials will update master administrative access.</p>
+            </div>
+
+            <form id="change-password-form">
+              <div class="form-group">
+                <label>Current Password</label>
+                <div class="password-input-wrap">
+                  <input type="password" id="admin-curr-password" placeholder="Enter current password" class="form-control" required />
+                  <button type="button" class="pwd-toggle-btn" data-target="admin-curr-password" title="Toggle visibility">
+                    <svg class="eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="eye-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>New Password</label>
+                <div class="password-input-wrap">
+                  <input type="password" id="admin-new-password" placeholder="Enter new password" class="form-control" required />
+                  <button type="button" class="pwd-toggle-btn" data-target="admin-new-password" title="Toggle visibility">
+                    <svg class="eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="eye-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <div class="password-input-wrap">
+                  <input type="password" id="admin-confirm-password" placeholder="Re-enter new password" class="form-control" required />
+                  <button type="button" class="pwd-toggle-btn" data-target="admin-confirm-password" title="Toggle visibility">
+                    <svg class="eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="eye-closed" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-submit-row">
+                <button id="btn-update-password" type="submit" class="btn btn-teal-full">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Card 3: Shift Rules & Automated Midnight Reconciler (Matching Reference App Functionality) -->
+          <div class="card-box settings-card settings-card-full">
+            <div class="settings-card-header">
+              <div class="settings-card-icon icon-teal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="settings-card-title">
+                <h3>Shift Rules &amp; Automated Midnight Reconciler</h3>
+                <p>Scheduled cron engine that closes unclosed shifts and maintains audited compliance.</p>
+              </div>
+            </div>
+
+            <div class="reconciler-content-grid">
+              <div class="reconciler-info-col">
+                <div class="reconciler-rule-item">
+                  <div class="rule-label">Standard Work Shift</div>
+                  <div class="rule-value">09:30 AM &ndash; 06:30 PM <span class="rule-sub">(9.0 hrs / day)</span></div>
+                </div>
+                <div class="reconciler-rule-item">
+                  <div class="rule-label">Grace Period Window</div>
+                  <div class="rule-value">15 Minutes <span class="rule-sub">(Until 09:45 AM without penalty)</span></div>
+                </div>
+                <div class="reconciler-rule-item">
+                  <div class="rule-label">Midnight Auto-Close Rule</div>
+                  <div class="rule-value" style="color:var(--text-main);">Any open shift without checkout is automatically closed at 12:00 AM and logged as <strong style="color:var(--amber-700);">MISSED_LOGOUT</strong>.</div>
+                </div>
+              </div>
+
+              <div class="reconciler-action-col">
+                <div class="reconciler-status-box">
+                  <div class="rec-status-line">
+                    <span class="live-pulse-dot"></span>
+                    <strong>Daemon Scheduler Active</strong>
+                  </div>
+                  <div class="rec-next-run">Next automatic run: <strong>Tonight at 12:00:00 AM IST</strong></div>
+                </div>
+                <button id="btn-simulate-reconcile" type="button" class="btn btn-outline-teal" style="width:100%; justify-content:center;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                  Simulate 12:00 AM Auto-Close Now
+                </button>
+              </div>
             </div>
           </div>
-          
-          <form id="settings-form">
-            <div class="form-row-2">
-              <div class="form-group">
-                <label>Office Latitude</label>
-                <input type="number" step="any" id="setting-office-lat" class="form-control" required />
-              </div>
-              <div class="form-group">
-                <label>Office Longitude</label>
-                <input type="number" step="any" id="setting-office-lng" class="form-control" required />
-              </div>
-            </div>
 
-            <div class="form-row-2">
-              <div class="form-group">
-                <label>Allowed Geofence Radius (meters)</label>
-                <input type="number" id="setting-radius" class="form-control" min="20" max="1000" required />
-              </div>
-              <div class="form-group">
-                <label>Grace Period (minutes)</label>
-                <input type="number" id="setting-grace" class="form-control" min="0" max="60" required />
-              </div>
-            </div>
-
-            <div class="form-row-2">
-              <div class="form-group">
-                <label>Shift Start Time</label>
-                <input type="time" id="setting-shift-start" class="form-control" required />
-              </div>
-              <div class="form-group">
-                <label>Shift End Time</label>
-                <input type="time" id="setting-shift-end" class="form-control" required />
-              </div>
-            </div>
-
-            <div style="display:flex; gap:0.85rem; margin-top:1.5rem; flex-wrap:wrap;">
-              <button type="submit" class="btn btn-primary">Save Configuration</button>
-              <button type="button" id="sync-current-gps-btn" class="btn btn-secondary">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-                <span>Set Office to Device GPS</span>
-              </button>
-            </div>
-          </form>
         </div>
       </div>
 
@@ -584,6 +813,49 @@
 
         <div class="geofence-alert-actions">
           <button id="close-geo-alert-btn" class="alert-action-btn primary" style="width:100%;">Acknowledge</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 1B: BARCODE SCAN ERROR / UNRECOGNIZED IDENTIFIER MODAL
+       ========================================================================= -->
+  <div id="scan-error-modal" class="geofence-alert-modal">
+    <div class="geofence-alert-box scan-error-box">
+      <div class="geofence-alert-header" style="background: linear-gradient(135deg, #7F1D1D, #991B1B, #DC2626);">
+        <div class="geofence-alert-radar" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: #FFFFFF;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <h3 id="scan-error-title">BARCODE SCAN NOT RECOGNIZED</h3>
+        <p id="scan-error-sub">Attendance Verification Incomplete</p>
+      </div>
+
+      <div class="geofence-alert-body">
+        <div id="scan-error-message" class="geofence-warning-quote" style="border-left-color: var(--rose-600); color: var(--navy-900);">
+          No registered employee record matches this barcode. Please ensure your ID badge is registered with HR.
+        </div>
+
+        <div class="scanned-code-display" style="background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Scanned Value:</span>
+          <span id="scan-error-code-val" style="font-family:var(--font-mono); font-size:0.95rem; font-weight:700; color:var(--rose-600);">--</span>
+        </div>
+
+        <div class="scan-error-guidance" style="font-size:0.76rem; color:var(--text-muted); line-height:1.45; margin-bottom:1.25rem;">
+          <strong style="color:var(--navy-900); display:block; margin-bottom:0.25rem;">Troubleshooting Tips:</strong>
+          <ul style="padding-left:1.15rem; margin:0;">
+            <li>Hold the ID card straight, 15&ndash;20 cm away from the camera.</li>
+            <li>Ensure there is sufficient room light and avoid glass/screen reflections.</li>
+            <li>You can also type your Employee ID manually into the box below the camera.</li>
+          </ul>
+        </div>
+
+        <div class="geofence-alert-actions">
+          <button id="close-scan-error-btn" class="alert-action-btn primary" style="width:100%; background: var(--navy-900);">Try Again</button>
         </div>
       </div>
     </div>

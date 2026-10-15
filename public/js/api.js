@@ -50,6 +50,13 @@ class ApiService {
     return this.request('/api/auth/verify');
   }
 
+  async changePassword(currentPassword, newPassword, confirmPassword) {
+    return this.request('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+    });
+  }
+
   // Settings
   async getSettings() {
     return this.request('/api/settings');
@@ -59,6 +66,12 @@ class ApiService {
     return this.request('/api/settings', {
       method: 'PUT',
       body: JSON.stringify(settings)
+    });
+  }
+
+  async simulateReconcile() {
+    return this.request('/api/settings/reconcile', {
+      method: 'POST'
     });
   }
 

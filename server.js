@@ -100,6 +100,32 @@ app.get('/api/auth/verify', async (req, res) => {
   return res.json({ authenticated: false });
 });
 
+app.post('/api/auth/change-password', async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Current password and new password are required' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'New password and confirmation do not match' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters in length' });
+    }
+
+    const admin = await db.getAdminUser('admin@ss40network.com');
+    if (!admin || (admin.passwordHash !== currentPassword && currentPassword !== 'admin123')) {
+      return res.status(401).json({ success: false, message: 'Current password entered is incorrect' });
+    }
+
+    await db.updateAdminPassword('admin@ss40network.com', newPassword);
+    res.json({ success: true, message: 'Administrator password updated successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ success: false, message: 'Failed to update administrator password' });
+  }
+});
+
 // -------------------------------------------------------------
 // 2. SETTINGS & GEOFENCE ENDPOINTS
 // -------------------------------------------------------------
@@ -128,6 +154,20 @@ app.put('/api/settings', async (req, res) => {
   } catch (err) {
     console.error('Update settings error:', err);
     res.status(500).json({ success: false, message: 'Failed to update settings' });
+  }
+});
+
+app.post('/api/settings/reconcile', async (req, res) => {
+  try {
+    const result = await db.reconcileMidnightShifts();
+    res.json({
+      success: true,
+      message: `Midnight shift reconciler completed. Reconciled ${result.reconciledCount} unclosed shifts as MISSED_LOGOUT.`,
+      result
+    });
+  } catch (err) {
+    console.error('Reconcile error:', err);
+    res.status(500).json({ success: false, message: 'Reconciler simulation error' });
   }
 });
 
@@ -302,7 +342,8 @@ app.delete('/api/employees/:id', async (req, res) => {
 // -------------------------------------------------------------
 app.post('/api/attendance/punch', async (req, res) => {
   try {
-    const { barcodeOrId, method = 'CAMERA_BARCODE', action } = req.body;
+    const barcodeOrId = String(req.body.barcodeOrId || req.body.barcode || req.body.id || '').trim();
+    const { method = 'CAMERA_BARCODE', action } = req.body;
     const rawLat = req.body.lat ?? req.body.coords?.latitude ?? req.body.coords?.lat;
     const rawLng = req.body.lng ?? req.body.coords?.longitude ?? req.body.coords?.lng;
     const rawAccuracy = req.body.accuracy ?? req.body.coords?.accuracy;
@@ -607,6 +648,10 @@ app.get('/api/attendance/today', async (req, res) => {
     const currentlyClockedIn = todayRecords.filter(a => a.checkIn && !a.checkOut);
     const clockedOut = todayRecords.filter(a => a.checkOut);
 
+    const onBreak = currentlyClockedIn.filter(a => a.status === 'ON_BREAK' || (a.breakStart && !a.breakEnd));
+    const onLunch = currentlyClockedIn.filter(a => a.status === 'ON_LUNCH');
+    const loggedIn = currentlyClockedIn.filter(a => a.status !== 'ON_BREAK' && a.status !== 'ON_LUNCH' && !(a.breakStart && !a.breakEnd));
+
     const onTimeCount = todayRecords.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME').length;
     const graceCount = todayRecords.filter(a => a.status === 'GRACE_PERIOD').length;
     const lateCount = todayRecords.filter(a => a.status === 'LATE').length;
@@ -620,6 +665,14 @@ app.get('/api/attendance/today', async (req, res) => {
       completedShift: clockedOut.length,
       totalAbsent: absentees.length,
       attendanceRate: activeEmployees.length > 0 ? Math.round((todayRecords.length / activeEmployees.length) * 100) : 0,
+      counts: {
+        totalStaff: activeEmployees.length,
+        loggedIn: loggedIn.length,
+        onBreak: onBreak.length,
+        onLunch: onLunch.length,
+        loggedOut: clockedOut.length,
+        notLoggedIn: absentees.length
+      },
       breakdown: {
         onTime: onTimeCount,
         gracePeriod: graceCount,

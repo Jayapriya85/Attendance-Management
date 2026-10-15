@@ -8,10 +8,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentView = 'kiosk'; // 'kiosk' | 'admin'
   let currentScanMode = 'camera'; // 'camera' | 'usb'
   let adminAuthenticated = false;
-  let activeAdminTab = 'feed';
+  let activeAdminTab = 'dashboard';
   let punchAutoDismissTimer = null;
   let cachedEmployees = [];
   let cachedSettings = {};
+  let currentDashboardRoster = [];
 
   // DOM Elements Cache
   const kioskView = document.getElementById('view-kiosk');
@@ -23,9 +24,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   const audioToggleBtn = document.getElementById('audio-toggle-btn');
   const fullscreenBtn = document.getElementById('fullscreen-btn');
 
+  // Header Elements
+  const headerBackBtn = document.getElementById('header-back-btn');
+  const headerAdminActions = document.getElementById('header-admin-actions');
+  const headerBrandTagline = document.getElementById('header-brand-tagline');
+  const headerLogoutBtn = document.getElementById('header-logout-btn');
+
+  // Dashboard Tab Elements
+  const statTotalStaff = document.getElementById('stat-total-staff');
+  const statLoggedIn = document.getElementById('stat-logged-in');
+  const statOnBreak = document.getElementById('stat-on-break');
+  const statOnLunch = document.getElementById('stat-on-lunch');
+  const statLoggedOut = document.getElementById('stat-logged-out');
+  const statNotLoggedIn = document.getElementById('stat-not-logged-in');
+  const dashRefreshBtn = document.getElementById('dashboard-refresh-btn');
+  const dashSearchInput = document.getElementById('dashboard-search-input');
+  const dashDeptFilter = document.getElementById('dashboard-dept-filter');
+  const dashStatusFilter = document.getElementById('dashboard-status-filter');
+  const dashRosterList = document.getElementById('dashboard-roster-list');
+  const dashEmptyState = document.getElementById('dashboard-empty-state');
+
   // Modals
   const punchModal = document.getElementById('punch-modal');
   const geofenceAlertModal = document.getElementById('geofence-alert-modal');
+  const scanErrorModal = document.getElementById('scan-error-modal');
   const adminLoginModal = document.getElementById('admin-login-modal');
   const employeeModal = document.getElementById('employee-modal');
   const idBadgeModal = document.getElementById('id-badge-modal');
@@ -197,21 +219,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cleanId = barcodeOrId.trim();
     const actionToPerform = requestedAction || selectedPunchAction || undefined;
 
-    // 1. Show immediate GPS acquisition feedback
-    window.apiService.showToast('Verifying GPS location...', 'info');
-
-    let coords = null;
-    try {
-      // Actively acquire fresh GPS coordinates from browser HTML5 Geolocation
-      coords = await window.geofenceMgr.acquireLocation();
-    } catch (locErr) {
-      // If immediate fix fails, check if recent watchPosition fix exists
-      if (window.geofenceMgr.currentPosition) {
-        coords = window.geofenceMgr.currentPosition;
-      } else {
-        window.soundFX.playWarningTone();
-        window.apiService.showToast(locErr.message || 'GPS location permission required to verify attendance.', 'error');
-        return;
+    // 1. Verify GPS location
+    let coords = window.geofenceMgr.currentPosition;
+    if (!coords) {
+      window.apiService.showToast('Verifying GPS location...', 'info');
+      try {
+        coords = await window.geofenceMgr.acquireLocation();
+      } catch (locErr) {
+        if (window.geofenceMgr.currentPosition) {
+          coords = window.geofenceMgr.currentPosition;
+        } else {
+          window.soundFX.playWarningTone();
+          showScanErrorModal(
+            'GPS PERMISSION REQUIRED',
+            'Location Access Denied or Inactive',
+            cleanId,
+            locErr.message || 'GPS location permission is required to verify that attendance is marked within the official office facility.'
+          );
+          return;
+        }
       }
     }
 
@@ -252,15 +278,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     const result = await window.apiService.punchAttendance(cleanId, coords, method, actionToPerform);
 
     if (!result.ok) {
+      window.soundFX.playWarningTone();
       // Check for GEOFENCE_VIOLATION from server
       if (result.data && result.data.code === 'GEOFENCE_VIOLATION') {
-        window.soundFX.playWarningTone();
         showGeofenceWarningModal(result.data);
         return;
       }
 
-      window.soundFX.playWarningTone();
-      window.apiService.showToast(result.data.message || 'Scanning verification failed', 'error');
+      if (result.data && result.data.code === 'EMPLOYEE_NOT_FOUND') {
+        showScanErrorModal(
+          'EMPLOYEE NOT REGISTERED',
+          'Unrecognized ID Barcode',
+          cleanId,
+          result.data.message || `No registered employee matches identifier "${cleanId}". Please register this employee in Admin > Employees or check your ID badge.`
+        );
+        return;
+      }
+
+      showScanErrorModal(
+        'SCAN VERIFICATION FAILED',
+        result.data?.code || 'Attendance Error',
+        cleanId,
+        result.data?.message || 'Attendance verification failed. Please verify your ID badge or contact HR.'
+      );
       return;
     }
 
@@ -451,6 +491,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Show Stylized Scan Error Modal (Actionable error with troubleshooting)
+  function showScanErrorModal(title, sub, scannedCode, message) {
+    if (!scanErrorModal) return;
+
+    const titleEl = document.getElementById('scan-error-title');
+    const subEl = document.getElementById('scan-error-sub');
+    const codeEl = document.getElementById('scan-error-code-val');
+    const msgEl = document.getElementById('scan-error-message');
+
+    if (titleEl && title) titleEl.textContent = title;
+    if (subEl && sub) subEl.textContent = sub;
+    if (codeEl && scannedCode) codeEl.textContent = scannedCode;
+    if (msgEl && message) msgEl.textContent = message;
+
+    scanErrorModal.classList.add('active');
+  }
+  window.showScanErrorModal = showScanErrorModal;
+
+  const closeScanErrorBtn = document.getElementById('close-scan-error-btn');
+  if (closeScanErrorBtn) {
+    closeScanErrorBtn.addEventListener('click', () => {
+      scanErrorModal.classList.remove('active');
+    });
+  }
+
   // Show Punch Success Modal with Complete Break and Shift Statuses
   function showPunchSuccessModal(data) {
     if (!punchModal) return;
@@ -615,6 +680,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Upload Badge Image for Direct Barcode Scanning
+  const uploadBadgeBtn = document.getElementById('upload-badge-img-btn');
+  const badgePhotoInput = document.getElementById('badge-photo-input');
+  if (uploadBadgeBtn && badgePhotoInput) {
+    uploadBadgeBtn.addEventListener('click', () => {
+      badgePhotoInput.click();
+    });
+    badgePhotoInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        await window.barcodeScanner.scanImageFile(file);
+        badgePhotoInput.value = '';
+      }
+    });
+  }
+
   // Hardware Manual Input Submit
   const hwSubmitBtn = document.getElementById('hardware-submit-btn');
   const hwInput = document.getElementById('hardware-barcode-input');
@@ -693,6 +774,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       adminView.classList.remove('active');
       navKioskBtn.classList.add('active');
       navAdminBtn.classList.remove('active');
+      if (headerBackBtn) headerBackBtn.style.display = 'none';
+      if (headerAdminActions) headerAdminActions.style.display = 'none';
+      if (headerBrandTagline) headerBrandTagline.textContent = 'Official Corporate Attendance Portal';
       // Resume camera
       window.barcodeScanner.initCamera('camera-preview');
     } else {
@@ -704,6 +788,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       adminView.classList.add('active');
       navKioskBtn.classList.remove('active');
       navAdminBtn.classList.add('active');
+      if (headerBackBtn) headerBackBtn.style.display = 'inline-flex';
+      if (headerAdminActions) headerAdminActions.style.display = 'flex';
+      if (headerBrandTagline) headerBrandTagline.textContent = 'Operations Command Center';
       // Pause camera to save CPU/battery
       window.barcodeScanner.stopCamera();
       loadAdminDashboard();
@@ -712,6 +799,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   navKioskBtn.addEventListener('click', () => switchView('kiosk'));
   navAdminBtn.addEventListener('click', () => switchView('admin'));
+
+  if (headerBackBtn) {
+    headerBackBtn.addEventListener('click', () => switchView('kiosk'));
+  }
+
+  if (headerLogoutBtn) {
+    headerLogoutBtn.addEventListener('click', () => {
+      window.apiService.setToken(null);
+      adminAuthenticated = false;
+      window.apiService.showToast('Admin logged out', 'info');
+      switchView('kiosk');
+    });
+  }
 
   // -------------------------------------------------------------
   // 7. ADMIN AUTHENTICATION
@@ -749,17 +849,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Admin Logout
-  const adminLogoutBtn = document.getElementById('admin-logout-btn');
-  if (adminLogoutBtn) {
-    adminLogoutBtn.addEventListener('click', () => {
-      window.apiService.setToken(null);
-      adminAuthenticated = false;
-      window.apiService.showToast('Admin logged out', 'info');
-      switchView('kiosk');
-    });
-  }
-
   // -------------------------------------------------------------
   // 8. ADMIN DASHBOARD & TABS
   // -------------------------------------------------------------
@@ -782,7 +871,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   function handleAdminTabActivation(tab) {
-    if (tab === 'feed') loadTodayLiveOverview();
+    if (tab === 'dashboard' || tab === 'feed') loadTodayLiveOverview();
     if (tab === 'employees') loadEmployeesTable();
     if (tab === 'logs') loadAttendanceLogs();
     if (tab === 'idcard') initIdBadgeStudio();
@@ -795,7 +884,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // -------------------------------------------------------------
-  // 9. TODAY'S LIVE OVERVIEW & KPI METRICS
+  // 9. TODAY'S LIVE OVERVIEW, 6 KPI CARDS & LIVE ROSTER (Matching Image 1)
   // -------------------------------------------------------------
   async function loadTodayLiveOverview() {
     const res = await window.apiService.getTodayOverview();
@@ -803,72 +892,145 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const d = res.data;
 
-    // Update KPI Cards
-    const kpiTotalEmp = document.getElementById('kpi-total-employees');
-    const kpiPresent = document.getElementById('kpi-present-today');
-    const kpiActive = document.getElementById('kpi-clocked-in');
-    const kpiPunctuality = document.getElementById('kpi-punctuality-rate');
-
-    if (kpiTotalEmp) kpiTotalEmp.textContent = d.totalEmployees;
-    if (kpiPresent) kpiPresent.textContent = `${d.totalPresent} (${d.attendanceRate}%)`;
-    if (kpiActive) kpiActive.textContent = d.currentlyActive;
-    if (kpiPunctuality) {
-      const totalP = d.totalPresent || 1;
-      const onTimePct = Math.round(((d.breakdown.onTime + d.breakdown.gracePeriod) / totalP) * 100);
-      kpiPunctuality.textContent = `${onTimePct}%`;
+    // 1. Update 6 Core Shift Status Cards
+    if (d.counts) {
+      if (statTotalStaff) statTotalStaff.textContent = d.counts.totalStaff;
+      if (statLoggedIn) statLoggedIn.textContent = d.counts.loggedIn;
+      if (statOnBreak) statOnBreak.textContent = d.counts.onBreak;
+      if (statOnLunch) statOnLunch.textContent = d.counts.onLunch;
+      if (statLoggedOut) statLoggedOut.textContent = d.counts.loggedOut;
+      if (statNotLoggedIn) statNotLoggedIn.textContent = d.counts.notLoggedIn;
     }
 
-    // Render Today's Live Feed Table
-    const feedTbody = document.getElementById('live-feed-tbody');
-    if (feedTbody) {
-      if (d.todayLogs.length === 0) {
-        feedTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-muted);">No attendance scans registered today yet. Use the Kiosk to punch in.</td></tr>`;
-      } else {
-        feedTbody.innerHTML = d.todayLogs.map(log => {
-          const statusMap = {
-            ON_TIME: { label: 'On-Time', cls: 'on-time' },
-            GRACE_PERIOD: { label: 'Grace Period', cls: 'grace' },
-            LATE: { label: 'Late', cls: 'late' },
-            EARLY_LEAVING: { label: 'Early Leaving', cls: 'early' },
-            OVERTIME: { label: 'Overtime', cls: 'overtime' }
-          };
-          const s = statusMap[log.status] || { label: log.status, cls: 'on-time' };
+    // 2. Build Unified Shift Roster
+    currentDashboardRoster = [];
 
-          const methodMap = {
-            CAMERA_BARCODE: 'WebRTC Camera',
-            USB_HARDWARE: 'USB Scanner Gun',
-            MANUAL_KIOSK: 'Manual Entry'
-          };
+    // Map checked in / shift active employees
+    (d.todayLogs || []).forEach(log => {
+      let statusCategory = 'LOGGED_IN';
+      let statusLabel = 'Logged In';
+      let badgeClass = 'on-time';
+      let timeDisplay = log.checkInTime || '-';
+      let timeLabel = 'Punch In';
 
-          return `
-            <tr>
-              <td>
-                <div class="table-emp-cell">
-                  <div class="emp-avatar-sm" style="background-color: var(--teal-700);">
-                    ${log.employeeName.charAt(0)}
-                  </div>
-                  <div class="emp-info-sm">
-                    <div class="name">${log.employeeName}</div>
-                    <div class="code">${log.employeeId}</div>
-                  </div>
-                </div>
-              </td>
-              <td><strong>${log.checkInTime || '-'}</strong></td>
-              <td>${log.checkOutTime ? `<strong>${log.checkOutTime}</strong>` : '<span style="color:var(--emerald-600); font-weight:700;">● In Office</span>'}</td>
-              <td>${log.hoursWorked !== null ? `${log.hoursWorked} hrs` : 'In Progress'}</td>
-              <td><span class="status-badge ${s.cls}">${s.label}</span></td>
-              <td><span class="method-tag">${methodMap[log.method] || log.method}</span></td>
-              <td>
-                <span style="display:inline-flex; align-items:center; gap:4px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--teal-700); font-weight: 600;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  ${log.location ? `${log.location.distanceMeters}m from office` : 'Verified'}
-                </span>
-              </td>
-            </tr>
-          `;
-        }).join('');
+      if (log.checkOut) {
+        statusCategory = 'LOGGED_OUT';
+        statusLabel = 'Logged Out';
+        badgeClass = 'offline';
+        timeDisplay = log.checkOutTime || '-';
+        timeLabel = 'Punch Out';
+      } else if (log.status === 'ON_BREAK' || (log.breakStart && !log.breakEnd)) {
+        statusCategory = 'ON_BREAK';
+        statusLabel = 'On Break';
+        badgeClass = 'grace';
+        timeDisplay = log.breakStartTime || log.checkInTime || '-';
+        timeLabel = 'Break Time';
+      } else if (log.status === 'ON_LUNCH') {
+        statusCategory = 'ON_LUNCH';
+        statusLabel = 'On Lunch';
+        badgeClass = 'early';
+        timeDisplay = log.checkInTime || '-';
+        timeLabel = 'Lunch Time';
       }
+
+      currentDashboardRoster.push({
+        id: log.employeeId,
+        name: log.employeeName,
+        department: log.department,
+        designation: log.designation || 'Staff',
+        statusCategory,
+        statusLabel,
+        badgeClass,
+        timeDisplay,
+        timeLabel,
+        avatarColor: '#0F766E'
+      });
+    });
+
+    // Map not logged in / pending employees
+    (d.absentees || []).forEach(emp => {
+      currentDashboardRoster.push({
+        id: emp.id,
+        name: emp.name,
+        department: emp.department,
+        designation: emp.designation || emp.role || 'Staff',
+        statusCategory: 'NOT_LOGGED_IN',
+        statusLabel: 'Not Logged In',
+        badgeClass: 'danger',
+        timeDisplay: 'Pending',
+        timeLabel: 'Check-in',
+        avatarColor: emp.avatarColor || '#64748B'
+      });
+    });
+
+    renderDashboardRoster();
+  }
+
+  function renderDashboardRoster() {
+    if (!dashRosterList) return;
+
+    const searchTerm = (dashSearchInput ? dashSearchInput.value : '').trim().toLowerCase();
+    const deptTerm = dashDeptFilter ? dashDeptFilter.value : '';
+    const statusTerm = dashStatusFilter ? dashStatusFilter.value : '';
+
+    const filtered = currentDashboardRoster.filter(item => {
+      const matchesSearch = !searchTerm ||
+        item.name.toLowerCase().includes(searchTerm) ||
+        item.id.toLowerCase().includes(searchTerm) ||
+        item.department.toLowerCase().includes(searchTerm) ||
+        item.designation.toLowerCase().includes(searchTerm);
+
+      const matchesDept = !deptTerm || item.department === deptTerm;
+      const matchesStatus = !statusTerm || item.statusCategory === statusTerm;
+
+      return matchesSearch && matchesDept && matchesStatus;
+    });
+
+    if (filtered.length === 0) {
+      if (dashEmptyState) dashEmptyState.style.display = 'block';
+      dashRosterList.innerHTML = '';
+      return;
     }
+
+    if (dashEmptyState) dashEmptyState.style.display = 'none';
+
+    dashRosterList.innerHTML = filtered.map(item => `
+      <div class="roster-row-item" data-id="${item.id}" data-dept="${item.department}">
+        <div class="roster-emp-info">
+          <div class="roster-avatar" style="background-color: ${item.avatarColor};">
+            ${item.name.charAt(0)}
+          </div>
+          <div class="roster-meta">
+            <div class="roster-name">${item.name}</div>
+            <div class="roster-sub"><span class="dept-tag">${item.department}</span> • ${item.designation} (${item.id})</div>
+          </div>
+        </div>
+        <div class="roster-status-col">
+          <div class="roster-time-col">
+            <span class="roster-time-val">${item.timeDisplay}</span>
+            <span class="roster-time-lbl">${item.timeLabel}</span>
+          </div>
+          <span class="status-badge ${item.badgeClass}">${item.statusLabel}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Dashboard Filters & Refresh Listeners
+  if (dashSearchInput) {
+    dashSearchInput.addEventListener('input', () => renderDashboardRoster());
+  }
+  if (dashDeptFilter) {
+    dashDeptFilter.addEventListener('change', () => renderDashboardRoster());
+  }
+  if (dashStatusFilter) {
+    dashStatusFilter.addEventListener('change', () => renderDashboardRoster());
+  }
+  if (dashRefreshBtn) {
+    dashRefreshBtn.addEventListener('click', async () => {
+      await loadTodayLiveOverview();
+      window.apiService.showToast('Live dashboard analytics refreshed', 'success');
+    });
   }
 
   // -------------------------------------------------------------
@@ -1081,13 +1243,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let editingEmployeeId = null;
 
+  const dashAddEmpBtn = document.getElementById('dash-add-emp-btn');
+
+  function triggerOpenAddEmployee() {
+    editingEmployeeId = null;
+    if (empModalTitle) empModalTitle.textContent = 'Add New SS40 Employee';
+    if (empForm) empForm.reset();
+    if (employeeModal) employeeModal.classList.add('active');
+  }
+
   if (openAddEmpBtn) {
-    openAddEmpBtn.addEventListener('click', () => {
-      editingEmployeeId = null;
-      if (empModalTitle) empModalTitle.textContent = 'Add New SS40 Employee';
-      if (empForm) empForm.reset();
-      if (employeeModal) employeeModal.classList.add('active');
-    });
+    openAddEmpBtn.addEventListener('click', triggerOpenAddEmployee);
+  }
+
+  if (dashAddEmpBtn) {
+    dashAddEmpBtn.addEventListener('click', triggerOpenAddEmployee);
   }
 
   if (closeEmpModalBtn) {
@@ -1394,58 +1564,190 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // -------------------------------------------------------------
-  // 15. OFFICE GEOFENCE & POLICY SETTINGS
+  // 15. OFFICE GEOFENCE & POLICY SETTINGS (Matching Image 2)
   // -------------------------------------------------------------
   async function loadSettingsForm() {
     const res = await window.apiService.getSettings();
     if (!res.ok) return;
 
     cachedSettings = res.data.settings;
-    document.getElementById('setting-office-lat').value = cachedSettings.officeLat;
-    document.getElementById('setting-office-lng').value = cachedSettings.officeLng;
-    document.getElementById('setting-radius').value = cachedSettings.radiusMeters;
-    document.getElementById('setting-shift-start').value = cachedSettings.shiftStartTime;
-    document.getElementById('setting-shift-end').value = cachedSettings.shiftEndTime;
-    document.getElementById('setting-grace').value = cachedSettings.graceMinutes;
+    const nameEl = document.getElementById('setting-office-name');
+    const addrEl = document.getElementById('setting-office-address');
+    const latEl = document.getElementById('setting-office-lat');
+    const lngEl = document.getElementById('setting-office-lng');
+    const radEl = document.getElementById('setting-radius');
+    const radiusTag = document.getElementById('radius-preview-tag');
+
+    if (nameEl) nameEl.value = cachedSettings.companyName || cachedSettings.officeName || 'SS40 Network Main Office';
+    if (addrEl) addrEl.value = cachedSettings.address || cachedSettings.officeAddress || '1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli';
+    if (latEl && cachedSettings.officeLat !== undefined) latEl.value = cachedSettings.officeLat;
+    if (lngEl && cachedSettings.officeLng !== undefined) lngEl.value = cachedSettings.officeLng;
+    if (radEl) {
+      radEl.value = cachedSettings.radiusMeters || 150;
+      if (radiusTag) radiusTag.textContent = `${radEl.value}m`;
+    }
   }
 
-  const settingsForm = document.getElementById('settings-form');
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', async (e) => {
+  // Radius live preview tag
+  const settingRadiusInput = document.getElementById('setting-radius');
+  const radiusPreviewTag = document.getElementById('radius-preview-tag');
+  if (settingRadiusInput && radiusPreviewTag) {
+    settingRadiusInput.addEventListener('input', () => {
+      radiusPreviewTag.textContent = `${settingRadiusInput.value || 0}m`;
+    });
+  }
+
+  // One-Tap Office Location Lock ("Use My Current Location as Office Location")
+  const btnUseCurrentGps = document.getElementById('btn-use-current-gps');
+  if (btnUseCurrentGps) {
+    btnUseCurrentGps.addEventListener('click', async () => {
+      btnUseCurrentGps.classList.add('locating');
+      const textSpan = btnUseCurrentGps.querySelector('span');
+      if (textSpan) textSpan.textContent = 'Detecting Physical GPS...';
+      const gpsLockReadout = document.getElementById('gps-lock-readout');
+      const gpsLockCoords = document.getElementById('gps-lock-coords');
+
+      try {
+        const coords = await window.geofenceMgr.acquireLocation();
+        const latEl = document.getElementById('setting-office-lat');
+        const lngEl = document.getElementById('setting-office-lng');
+        if (latEl && lngEl) {
+          latEl.value = coords.lat.toFixed(6);
+          lngEl.value = coords.lng.toFixed(6);
+        }
+        if (gpsLockReadout && gpsLockCoords) {
+          gpsLockCoords.textContent = `Locked: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+          gpsLockReadout.style.display = 'inline-flex';
+        }
+        window.apiService.showToast(`Current GPS Locked: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`, 'success');
+      } catch (err) {
+        if (window.geofenceMgr.currentPosition) {
+          const pos = window.geofenceMgr.currentPosition;
+          document.getElementById('setting-office-lat').value = pos.lat.toFixed(6);
+          document.getElementById('setting-office-lng').value = pos.lng.toFixed(6);
+          if (gpsLockReadout && gpsLockCoords) {
+            gpsLockCoords.textContent = `Locked: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
+            gpsLockReadout.style.display = 'inline-flex';
+          }
+          window.apiService.showToast(`Current GPS Locked: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`, 'success');
+        } else {
+          window.apiService.showToast('Could not detect GPS: ' + (err.message || 'Permission denied'), 'error');
+        }
+      } finally {
+        btnUseCurrentGps.classList.remove('locating');
+        if (textSpan) textSpan.textContent = 'Use My Current Location as Office Location';
+      }
+    });
+  }
+
+  // Simulate Midnight 12:00 AM Reconciler
+  const btnSimulateReconcile = document.getElementById('btn-simulate-reconcile');
+  if (btnSimulateReconcile) {
+    btnSimulateReconcile.addEventListener('click', async () => {
+      btnSimulateReconcile.disabled = true;
+      const originalHtml = btnSimulateReconcile.innerHTML;
+      btnSimulateReconcile.innerHTML = `
+        <span class="live-pulse-dot" style="background:var(--teal-500); display:inline-block; margin-right:6px;"></span>
+        Reconciling Open Shifts...
+      `;
+      try {
+        const res = await window.apiService.simulateReconcile();
+        if (res.ok) {
+          window.apiService.showToast(`Midnight reconciler executed: ${res.data.autoClosedCount || 0} open shift(s) closed with MISSED_LOGOUT.`, 'success');
+          loadAttendanceLogs();
+          loadTodayLiveOverview();
+        } else {
+          window.apiService.showToast(res.data?.message || 'Failed to simulate reconciler', 'error');
+        }
+      } catch (err) {
+        window.apiService.showToast('Reconciliation error: ' + err.message, 'error');
+      } finally {
+        btnSimulateReconcile.disabled = false;
+        btnSimulateReconcile.innerHTML = originalHtml;
+      }
+    });
+  }
+
+  // Save Geofence Settings Form Submission
+  const geofenceSettingsForm = document.getElementById('geofence-settings-form');
+  if (geofenceSettingsForm) {
+    geofenceSettingsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const officeName = document.getElementById('setting-office-name')?.value.trim();
+      const officeAddress = document.getElementById('setting-office-address')?.value.trim();
+      const officeLat = parseFloat(document.getElementById('setting-office-lat')?.value);
+      const officeLng = parseFloat(document.getElementById('setting-office-lng')?.value);
+      const radiusMeters = parseInt(document.getElementById('setting-radius')?.value, 10);
+
       const payload = {
-        officeLat: parseFloat(document.getElementById('setting-office-lat').value),
-        officeLng: parseFloat(document.getElementById('setting-office-lng').value),
-        radiusMeters: parseInt(document.getElementById('setting-radius').value, 10),
-        shiftStartTime: document.getElementById('setting-shift-start').value,
-        shiftEndTime: document.getElementById('setting-shift-end').value,
-        graceMinutes: parseInt(document.getElementById('setting-grace').value, 10)
+        officeName,
+        companyName: officeName,
+        officeAddress,
+        address: officeAddress,
+        officeLat,
+        officeLng,
+        radiusMeters
       };
 
       const res = await window.apiService.updateSettings(payload);
       if (res.ok) {
+        cachedSettings = res.data.settings;
         window.geofenceMgr.updateOfficeSettings(res.data.settings);
-        window.apiService.showToast('Office geofence settings updated successfully', 'success');
+        window.apiService.showToast('Office Geofence Settings saved successfully!', 'success');
       } else {
-        window.apiService.showToast('Failed to update settings', 'error');
+        window.apiService.showToast(res.data?.message || 'Failed to update geofence settings', 'error');
       }
     });
   }
 
-  // "Set Office to My Current GPS" Button
-  const syncGpsBtn = document.getElementById('sync-current-gps-btn');
-  if (syncGpsBtn) {
-    syncGpsBtn.addEventListener('click', () => {
-      if (window.geofenceMgr.currentPosition) {
-        const pos = window.geofenceMgr.currentPosition;
-        document.getElementById('setting-office-lat').value = pos.lat.toFixed(6);
-        document.getElementById('setting-office-lng').value = pos.lng.toFixed(6);
-        window.apiService.showToast(`Coordinates updated to current device GPS (${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})`, 'info');
+  // Change Admin Password Form Submission (Matching Image 2)
+  const changePasswordForm = document.getElementById('change-password-form');
+  if (changePasswordForm) {
+    changePasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const currentPassword = document.getElementById('admin-curr-password')?.value;
+      const newPassword = document.getElementById('admin-new-password')?.value;
+      const confirmPassword = document.getElementById('admin-confirm-password')?.value;
+
+      if (!currentPassword) {
+        window.apiService.showToast('Please enter your current admin password', 'warning');
+        return;
+      }
+      if (!newPassword || newPassword.length < 6) {
+        window.apiService.showToast('New password must be at least 6 characters', 'warning');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        window.apiService.showToast('New passwords do not match', 'error');
+        return;
+      }
+
+      const res = await window.apiService.changePassword(currentPassword, newPassword, confirmPassword);
+      if (res.ok && res.data.success) {
+        window.apiService.showToast('Admin password updated successfully! Please note your new password.', 'success');
+        changePasswordForm.reset();
       } else {
-        window.apiService.showToast('Current GPS coordinates not yet acquired. Ensure location is allowed in browser.', 'error');
+        window.apiService.showToast(res.data?.message || 'Failed to update password', 'error');
       }
     });
   }
+
+  // Password Visibility Eye Toggles
+  document.querySelectorAll('.pwd-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      const openEye = btn.querySelector('.eye-open');
+      const closedEye = btn.querySelector('.eye-closed');
+      if (openEye && closedEye) {
+        openEye.style.display = isPassword ? 'none' : 'block';
+        closedEye.style.display = isPassword ? 'block' : 'none';
+      }
+    });
+  });
 
   // -------------------------------------------------------------
   // INITIALIZATION BOOTSTRAP

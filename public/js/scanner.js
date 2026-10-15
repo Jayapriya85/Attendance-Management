@@ -74,21 +74,33 @@ class BarcodeScannerEngine {
   }
 
   async startCamera(containerId = 'camera-preview') {
-    if (!this.html5QrCode) {
+    if (this.isCameraRunning) return true;
+
+    // Reset previous instance if needed
+    try {
+      if (this.html5QrCode) {
+        try { await this.html5QrCode.stop(); } catch(e) {}
+        try { await this.html5QrCode.clear(); } catch(e) {}
+      }
+    } catch (e) {}
+
+    try {
       this.html5QrCode = new Html5Qrcode(containerId, {
         formatsToSupport: this.getSupportedFormatsList(),
         experimentalFeatures: { useBarCodeDetectorIfSupported: true }
       });
-    }
-    if (this.isCameraRunning) return true;
+    } catch (e) {}
 
     // Target barcode formats
     const formats = this.getSupportedFormatsList();
 
     const config = {
       fps: 15,
-      qrbox: { width: 280, height: 160 },
-      aspectRatio: 1.5,
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        const w = Math.min(Math.floor(viewfinderWidth * 0.90), 480);
+        const h = Math.min(Math.floor(viewfinderHeight * 0.70), 260);
+        return { width: Math.max(w, 220), height: Math.max(h, 150) };
+      },
       formatsToSupport: formats,
       experimentalFeatures: {
         useBarCodeDetectorIfSupported: true
@@ -103,7 +115,51 @@ class BarcodeScannerEngine {
       // Normal frame-by-frame analysis
     };
 
-    // Strategy 1: Attempt Environment (Rear) Camera (Mobile/Tablet)
+    const onCameraSuccess = (label) => {
+      this.isCameraRunning = true;
+      this.updateAimOverlay(true);
+      this.updateToggleButtonState(true);
+      this.updateHintText('Scanner Active: Position ID barcode 15&ndash;20cm from camera', false);
+      this.startGuidanceTimer();
+      console.log(`[Scanner] Camera started: ${label}`);
+      // Launch hardware-accelerated frame scanner
+      this.startLiveBarcodeDetector();
+    };
+
+    const hdConstraints = {
+      width: { min: 640, ideal: 1280, max: 1920 },
+      height: { min: 480, ideal: 720, max: 1080 }
+    };
+
+    // Strategy 1: Attempt Environment (Rear) Camera (Mobile/Tablet) in HD
+    try {
+      await this.html5QrCode.start(
+        { facingMode: "environment", ...hdConstraints },
+        config,
+        onScan,
+        onError
+      );
+      onCameraSuccess('facingMode: environment (HD)');
+      return true;
+    } catch (errEnv) {
+      console.info('[Scanner] Rear HD camera not available, attempting user HD camera...', errEnv.message);
+    }
+
+    // Strategy 2: Attempt User (Front) Camera (Laptops / Webcams) in HD
+    try {
+      await this.html5QrCode.start(
+        { facingMode: "user", ...hdConstraints },
+        config,
+        onScan,
+        onError
+      );
+      onCameraSuccess('facingMode: user (HD)');
+      return true;
+    } catch (errUser) {
+      console.info('[Scanner] User HD camera not available, querying device list...', errUser.message);
+    }
+
+    // Strategy 3: Standard resolution fallbacks
     try {
       await this.html5QrCode.start(
         { facingMode: "environment" },
@@ -111,16 +167,10 @@ class BarcodeScannerEngine {
         onScan,
         onError
       );
-      this.isCameraRunning = true;
-      this.updateAimOverlay(true);
-      this.updateToggleButtonState(true);
-      console.log('[Scanner] Camera started with facingMode: environment');
+      onCameraSuccess('facingMode: environment (SD)');
       return true;
-    } catch (errEnv) {
-      console.info('[Scanner] Rear camera not available, attempting user camera...', errEnv.message);
-    }
+    } catch (e) {}
 
-    // Strategy 2: Attempt User (Front) Camera (Laptops / Webcams)
     try {
       await this.html5QrCode.start(
         { facingMode: "user" },
@@ -128,16 +178,11 @@ class BarcodeScannerEngine {
         onScan,
         onError
       );
-      this.isCameraRunning = true;
-      this.updateAimOverlay(true);
-      this.updateToggleButtonState(true);
-      console.log('[Scanner] Camera started with facingMode: user');
+      onCameraSuccess('facingMode: user (SD)');
       return true;
-    } catch (errUser) {
-      console.info('[Scanner] User camera not available, querying device list...', errUser.message);
-    }
+    } catch (e) {}
 
-    // Strategy 3: Enumerate hardware cameras and attempt first detected device
+    // Strategy 4: Enumerate hardware cameras and attempt first detected device
     try {
       this.availableCameras = await Html5Qrcode.getCameras();
       if (this.availableCameras && this.availableCameras.length > 0) {
@@ -148,10 +193,7 @@ class BarcodeScannerEngine {
           onScan,
           onError
         );
-        this.isCameraRunning = true;
-        this.updateAimOverlay(true);
-        this.updateToggleButtonState(true);
-        console.log(`[Scanner] Camera started with device ID: ${this.currentCameraId}`);
+        onCameraSuccess(`device ID: ${this.currentCameraId}`);
         return true;
       }
     } catch (errList) {
@@ -160,6 +202,7 @@ class BarcodeScannerEngine {
 
     // If all camera starts failed (e.g. permission prompt dismissed or no webcam connected)
     this.isCameraRunning = false;
+    this.stopLiveBarcodeDetector();
     this.updateAimOverlay(false);
     this.updateToggleButtonState(false);
     this.renderCameraState(
@@ -167,6 +210,65 @@ class BarcodeScannerEngine {
       'Camera is paused or permission is needed. Click "Start Camera" to scan your ID card.'
     );
     return false;
+  }
+
+  startLiveBarcodeDetector() {
+    this.stopLiveBarcodeDetector();
+
+    if (!('BarcodeDetector' in window)) {
+      console.log('[Scanner] Using Html5Qrcode ZXing engine for barcode scanning.');
+      return;
+    }
+
+    console.log('[Scanner] Starting hardware-accelerated native BarcodeDetector loop...');
+    const supportedFormats = ['code_128', 'code_39', 'qr_code', 'ean_13', 'upc_a', 'itf'];
+    let detector = null;
+    try {
+      detector = new BarcodeDetector({ formats: supportedFormats });
+    } catch (e) {
+      detector = new BarcodeDetector();
+    }
+
+    const scanFrame = async () => {
+      if (!this.isCameraRunning) return;
+
+      const videoEl = document.querySelector('#camera-preview video');
+      if (videoEl && videoEl.readyState >= 2 && !videoEl.paused && !videoEl.ended) {
+        try {
+          const barcodes = await detector.detect(videoEl);
+          if (barcodes && barcodes.length > 0) {
+            for (const b of barcodes) {
+              const val = b.rawValue ? b.rawValue.trim() : '';
+              if (val) {
+                this.handleDetectedCode(val, 'CAMERA_BARCODE');
+                break;
+              }
+            }
+          }
+        } catch (err) {
+          // Frame decode error - continue to next frame
+        }
+      }
+
+      if (this.isCameraRunning) {
+        this.liveScanTimer = setTimeout(scanFrame, 90);
+      }
+    };
+
+    // Give camera 250ms to initialize first frame
+    setTimeout(() => {
+      if (this.isCameraRunning) {
+        scanFrame();
+      }
+    }, 250);
+  }
+
+  stopLiveBarcodeDetector() {
+    if (this.liveScanTimer) {
+      clearTimeout(this.liveScanTimer);
+      cancelAnimationFrame(this.liveScanTimer);
+      this.liveScanTimer = null;
+    }
   }
 
   updateToggleButtonState(running) {
@@ -177,16 +279,19 @@ class BarcodeScannerEngine {
   }
 
   async stopCamera() {
+    this.stopGuidanceTimer();
+    this.stopLiveBarcodeDetector();
+    this.updateHintText('Camera Scanner Paused. Click "Start Camera" to scan your ID card.', false);
     if (this.html5QrCode && this.isCameraRunning) {
       try {
         await this.html5QrCode.stop();
-        this.isCameraRunning = false;
-        this.updateAimOverlay(false);
-        this.updateToggleButtonState(false);
       } catch (err) {
         console.warn('[Scanner] Error stopping camera:', err);
       }
     }
+    this.isCameraRunning = false;
+    this.updateAimOverlay(false);
+    this.updateToggleButtonState(false);
     // Reset illumination visuals
     this.isTorchOn = false;
     const torchBtn = document.getElementById('toggle-torch-btn');
@@ -506,7 +611,14 @@ class BarcodeScannerEngine {
       }
     } catch (err) {
       console.warn('[Scanner] Image decode error:', err);
-      if (window.apiService) {
+      if (window.showScanErrorModal) {
+        window.showScanErrorModal(
+          'IMAGE SCAN FAILED',
+          'No Valid Barcode or QR Code Detected',
+          file.name || 'Uploaded Badge',
+          'The optical scanner could not read a clear Code-128 barcode or QR code from this image. Please hold the badge steady in bright light, or use manual entry below.'
+        );
+      } else if (window.apiService) {
         window.apiService.showToast('Could not read a clear barcode from that image. Please try another image or manual input.', 'error');
       }
     } finally {
@@ -577,8 +689,55 @@ class BarcodeScannerEngine {
     this.lastScannedCode = clean;
     this.lastScanTimestamp = now;
 
+    // Reset camera guidance and show scanned status
+    this.updateHintText(`Barcode detected: <strong style="font-family:monospace;">${clean}</strong>. Verifying attendance...`, false);
+    this.startGuidanceTimer();
+
+    // Trigger visual aim frame pulse
+    const aimFrame = document.querySelector('.aim-frame');
+    if (aimFrame) {
+      aimFrame.classList.add('scan-success');
+      setTimeout(() => aimFrame.classList.remove('scan-success'), 700);
+    }
+    const viewport = document.getElementById('camera-viewport-wrap');
+    if (viewport) {
+      viewport.classList.add('scan-success-pulse');
+      setTimeout(() => viewport.classList.remove('scan-success-pulse'), 700);
+    }
+
+    // Audio chime
+    if (window.soundFX && window.soundFX.playBeep) {
+      window.soundFX.playBeep();
+    }
+
     if (this.onBarcodeDetected) {
       this.onBarcodeDetected(clean, method);
+    }
+  }
+
+  updateHintText(html, isWarning = false) {
+    const hintText = document.getElementById('camera-hint-text');
+    const hintWrap = document.getElementById('camera-scan-hint');
+    if (hintText) hintText.innerHTML = html;
+    if (hintWrap) {
+      if (isWarning) hintWrap.classList.add('warning');
+      else hintWrap.classList.remove('warning');
+    }
+  }
+
+  startGuidanceTimer() {
+    this.stopGuidanceTimer();
+    this.guidanceTimer = setTimeout(() => {
+      if (this.isCameraRunning) {
+        this.updateHintText('💡 <strong>Guidance:</strong> Hold card steady 15&ndash;20cm away in good lighting, or enter Employee ID in Quick Box below.', true);
+      }
+    }, 7000);
+  }
+
+  stopGuidanceTimer() {
+    if (this.guidanceTimer) {
+      clearTimeout(this.guidanceTimer);
+      this.guidanceTimer = null;
     }
   }
 }

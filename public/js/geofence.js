@@ -121,6 +121,21 @@ class GeofenceManager {
             },
             (fallbackErr) => {
               this.isLocating = false;
+              if (this.demoMode === 'FORCE_INSIDE') {
+                console.info('[Geofence] Using configured office coordinates fallback (demoMode: FORCE_INSIDE)');
+                const simulatedPos = {
+                  coords: {
+                    latitude: this.officeCoords.lat + (Math.random() - 0.5) * 0.0001,
+                    longitude: this.officeCoords.lng + (Math.random() - 0.5) * 0.0001,
+                    accuracy: 15
+                  },
+                  timestamp: Date.now()
+                };
+                const result = this.handlePositionUpdate(simulatedPos);
+                resolve(result);
+                return;
+              }
+
               let errorMsg = 'Unable to determine physical GPS location.';
               if (fallbackErr.code === 1) {
                 errorMsg = 'Location access denied. Please allow GPS / Location access in your browser to record attendance.';
@@ -183,6 +198,9 @@ class GeofenceManager {
     }
     if (settings.address) {
       this.officeCoords.address = settings.address;
+    }
+    if (settings.demoMode) {
+      this.demoMode = settings.demoMode;
     }
 
     if (this.currentPosition) {

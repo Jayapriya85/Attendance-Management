@@ -1,9 +1,9 @@
 {
   "settings": {
-    "companyName": "SS40 NETWORK PRIVATE LIMITED",
+    "companyName": "SS40 Network Main Office",
     "shortName": "SS40 NETWORK",
     "website": "https://ss40network.com",
-    "address": "1st Floor, Municipal Corporation Incubation Centre (Near by trade centre), Sree Puram, Tirunelveli, Tamil Nadu 627001",
+    "address": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli",
     "phone": "+91 8300591750",
     "email": "support@ss40network.com",
     "cin": "U72900TN2023PTC160892",
@@ -14,7 +14,9 @@
     "shiftStartTime": "09:30",
     "shiftEndTime": "18:30",
     "graceMinutes": 15,
-    "demoMode": "FORCE_INSIDE"
+    "demoMode": "FORCE_INSIDE",
+    "officeName": "SS40 Network Main Office",
+    "officeAddress": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli"
   },
   "admin": {
     "username": "admin@ss40network.com",
@@ -198,9 +200,97 @@
       "status": "Active",
       "joinedDate": "2026-10-10",
       "emergencyContact": "+91 94421 88299"
+    },
+    {
+      "id": "SS40-EMP-9250",
+      "name": "karu",
+      "email": "karu@ss40network.com",
+      "department": "SS40 Digital Solutions",
+      "wing": "Digital Solutions",
+      "designation": "Data Scientist",
+      "barcode": "SS40-EMP-9250",
+      "phone": "+91 94421 88201",
+      "bloodGroup": "O+",
+      "shift": "09:30 - 18:30",
+      "avatarColor": "#4F46E5",
+      "status": "Active",
+      "joinedDate": "2026-10-15",
+      "emergencyContact": "+91 94421 88299"
+    },
+    {
+      "id": "SS40-EMP-0833",
+      "name": "Aishu",
+      "email": "aishu@ss40network.com",
+      "department": "SS40 Tech Academics",
+      "wing": "Digital Solutions",
+      "designation": "Principal Solutions Architect",
+      "barcode": "SS40-EMP-0833",
+      "phone": "+91 94421 88201",
+      "bloodGroup": "O+",
+      "shift": "09:30 - 18:30",
+      "avatarColor": "#059669",
+      "status": "Active",
+      "joinedDate": "2026-10-15",
+      "emergencyContact": "+91 94421 88299"
     }
   ],
   "attendance": [
+    {
+      "id": "ATT-20261015-9603",
+      "employeeId": "SS40-EMP-1001",
+      "employeeName": "Selvakumar S.",
+      "department": "SS40 Digital Solutions",
+      "designation": "Principal Solutions Architect",
+      "date": "2026-10-15",
+      "checkIn": "2026-10-15T04:58:19.602Z",
+      "checkInTime": "10:28 AM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "breakStart": null,
+      "breakStartTime": null,
+      "breakEnd": null,
+      "breakEndTime": null,
+      "breakMinutes": 0,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728512,
+        "lng": 77.727438,
+        "distanceMeters": 0,
+        "accuracy": 10,
+        "isInside": true,
+        "address": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli"
+      }
+    },
+    {
+      "id": "ATT-20261014-6397",
+      "employeeId": "SS40-EMP-1001",
+      "employeeName": "Selvakumar S.",
+      "department": "SS40 Digital Solutions",
+      "designation": "Principal Solutions Architect",
+      "date": "2026-10-14",
+      "checkIn": "2026-10-14T17:52:16.396Z",
+      "checkInTime": "11:22 PM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "breakStart": null,
+      "breakStartTime": null,
+      "breakEnd": null,
+      "breakEndTime": null,
+      "breakMinutes": 0,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 8.728512,
+        "lng": 77.727438,
+        "distanceMeters": 0,
+        "accuracy": 15,
+        "isInside": true,
+        "address": "1st Floor, Municipal Corporation Incubation Centre (Near by trade centre), Sree Puram, Tirunelveli, Tamil Nadu 627001"
+      }
+    },
     {
       "id": "ATT-20261010-8151",
       "employeeId": "SS40-EMP-1010",
