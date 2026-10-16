@@ -14,13 +14,13 @@
     "shiftStartTime": "09:30",
     "shiftEndTime": "18:30",
     "graceMinutes": 15,
-    "demoMode": "FORCE_INSIDE",
+    "demoMode": "STRICT_GEOFENCE",
     "officeName": "SS40 Network Main Office",
     "officeAddress": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli"
   },
   "admin": {
     "username": "admin@ss40network.com",
-    "passwordHash": "admin123",
+    "passwordHash": "Admin@123",
     "name": "SS40 Systems Administrator",
     "role": "Super Admin"
   },
@@ -34,12 +34,13 @@
       "designation": "Principal Solutions Architect",
       "barcode": "SS40-EMP-1001",
       "phone": "+91 94421 88201",
-      "bloodGroup": "O+",
+      "bloodGroup": "AB+",
       "shift": "09:30 - 18:30",
       "avatarColor": "#0F766E",
       "status": "Active",
       "joinedDate": "2023-06-01",
-      "emergencyContact": "+91 94421 88299"
+      "emergencyContact": "+91 94421 88299",
+      "role": "Principal Solutions Architect"
     },
     {
       "id": "SS40-EMP-1002",
@@ -232,9 +233,53 @@
       "status": "Active",
       "joinedDate": "2026-10-15",
       "emergencyContact": "+91 94421 88299"
+    },
+    {
+      "id": "SS40-EMP-8583",
+      "name": "Spidey",
+      "email": "spideyss40@gmail.com",
+      "department": "SS40 Digital Solutions",
+      "wing": "Digital Solutions",
+      "designation": "Trainee",
+      "barcode": "SS40-EMP-8583",
+      "phone": "8956231456",
+      "bloodGroup": "O+",
+      "shift": "09:30 - 18:30",
+      "avatarColor": "#059669",
+      "status": "Active",
+      "joinedDate": "2026-10-16",
+      "emergencyContact": "6312678345"
     }
   ],
   "attendance": [
+    {
+      "id": "ATT-20261016-6679",
+      "employeeId": "SS40-EMP-9250",
+      "employeeName": "karu",
+      "department": "SS40 Digital Solutions",
+      "designation": "Data Scientist",
+      "date": "2026-10-16",
+      "checkIn": "2026-10-16T05:05:46.671Z",
+      "checkInTime": "10:35 AM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "breakStart": null,
+      "breakStartTime": null,
+      "breakEnd": null,
+      "breakEndTime": null,
+      "breakMinutes": 0,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "MANUAL_KIOSK",
+      "location": {
+        "lat": 11.3157167,
+        "lng": 77.55056135,
+        "distanceMeters": 288335,
+        "accuracy": 141,
+        "isInside": true,
+        "address": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli"
+      }
+    },
     {
       "id": "ATT-20261015-5784",
       "employeeId": "SS40-EMP-1002",

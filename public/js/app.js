@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (kioskMeterVal) {
       if (state.distanceMeters !== null && !isNaN(state.distanceMeters)) {
         kioskMeterVal.textContent = window.geofenceMgr.formatDistance(state.distanceMeters);
-        kioskMeterVal.style.color = state.isInside ? 'var(--teal-400)' : 'var(--rose-500)';
+        kioskMeterVal.style.color = state.isInside ? 'var(--teal-700)' : 'var(--rose-600)';
       } else {
         kioskMeterVal.textContent = state.isLocating ? 'Locating...' : 'GPS Inactive';
         kioskMeterVal.style.color = 'var(--text-muted)';
@@ -249,10 +249,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.geofenceMgr.officeCoords.lng
     );
 
-    const isForceInside = window.geofenceMgr.demoMode === 'FORCE_INSIDE' || cachedSettings?.demoMode === 'FORCE_INSIDE';
-
-    // If outside the allowed perimeter and not in FORCE_INSIDE mode, block attendance check-in
-    if (!isForceInside && officeDist > window.geofenceMgr.allowedRadiusMeters) {
+    // If outside the allowed perimeter, strictly block attendance check-in
+    if (officeDist > window.geofenceMgr.allowedRadiusMeters) {
       const emp = cachedEmployees ? cachedEmployees.find(e => e.id === cleanId || e.barcode === cleanId) : null;
       window.soundFX.playWarningTone();
       showGeofenceWarningModal({
@@ -778,7 +776,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       navAdminBtn.classList.remove('active');
       if (headerBackBtn) headerBackBtn.style.display = 'none';
       if (headerAdminActions) headerAdminActions.style.display = 'none';
-      if (headerBrandTagline) headerBrandTagline.textContent = 'Official Corporate Attendance Portal';
+      if (headerBrandTagline) headerBrandTagline.textContent = 'Employee Attendance Portal';
       // Resume camera
       window.barcodeScanner.initCamera('camera-preview');
     } else {
@@ -792,7 +790,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       navAdminBtn.classList.add('active');
       if (headerBackBtn) headerBackBtn.style.display = 'inline-flex';
       if (headerAdminActions) headerAdminActions.style.display = 'flex';
-      if (headerBrandTagline) headerBrandTagline.textContent = 'Operations Command Center';
+      if (headerBrandTagline) headerBrandTagline.textContent = 'Admin Control Center';
       // Pause camera to save CPU/battery
       window.barcodeScanner.stopCamera();
       loadAdminDashboard();
@@ -868,11 +866,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (pane) pane.classList.add('active');
       activeAdminTab = tabTarget;
 
+      // Automatically center active tab on mobile viewports
+      try {
+        tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) {}
+
       handleAdminTabActivation(tabTarget);
     });
   });
 
   function handleAdminTabActivation(tab) {
+    const activeBtn = document.querySelector(`.admin-tab-btn[data-tab="${tab}"]`);
+    if (activeBtn) {
+      adminTabs.forEach(t => t.classList.remove('active'));
+      activeBtn.classList.add('active');
+      try {
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) {}
+    }
     if (tab === 'dashboard' || tab === 'feed') loadTodayLiveOverview();
     if (tab === 'employees') loadEmployeesTable();
     if (tab === 'logs') loadAttendanceLogs();
@@ -1060,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     tbody.innerHTML = employees.map(emp => `
       <tr>
-        <td>
+        <td data-label="Employee">
           <div class="table-emp-cell">
             <div class="emp-avatar-sm" style="background-color: ${emp.avatarColor || '#0F766E'};">
               ${emp.name.charAt(0)}
@@ -1071,19 +1082,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
         </td>
-        <td>
+        <td data-label="Wing & Role">
           <div style="font-weight: 600; font-size: 0.82rem;">${emp.department}</div>
           <div style="font-size: 0.72rem; color: var(--text-muted);">${emp.designation}</div>
         </td>
-        <td><code style="background:var(--bg-subtle); padding:2px 6px; border-radius:4px; font-size:0.75rem;">${emp.barcode}</code></td>
-        <td>${emp.phone}</td>
-        <td>
+        <td data-label="Barcode ID"><code style="background:var(--bg-subtle); padding:2px 6px; border-radius:4px; font-size:0.75rem;">${emp.barcode}</code></td>
+        <td data-label="Contact Phone">${emp.phone}</td>
+        <td data-label="Account Status">
           <span class="status-badge ${emp.status === 'Active' ? 'on-time' : 'late'}">
             ${emp.status}
           </span>
         </td>
-        <td>
-          <div style="display:flex; gap: 0.4rem;">
+        <td data-label="Actions">
+          <div style="display:flex; gap: 0.4rem; justify-content: flex-end;">
             <button class="btn-action-icon view-history-btn" data-id="${emp.id}" title="View Individual Attendance History">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             </button>
@@ -1249,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function triggerOpenAddEmployee() {
     editingEmployeeId = null;
-    if (empModalTitle) empModalTitle.textContent = 'Add New SS40 Employee';
+    if (empModalTitle) empModalTitle.textContent = 'Add New Employee';
     if (empForm) empForm.reset();
     if (employeeModal) employeeModal.classList.add('active');
   }
@@ -1357,11 +1368,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           return `
             <tr>
-              <td><strong>${rec.date}</strong></td>
-              <td>${rec.checkInTime || '-'}</td>
-              <td>${rec.checkOutTime || 'Active'}</td>
-              <td>${rec.hoursWorked !== null ? `${rec.hoursWorked} hrs` : '-'}</td>
-              <td><span class="status-badge ${s.cls}">${s.label}</span></td>
+              <td data-label="Date"><strong>${rec.date}</strong></td>
+              <td data-label="Punch In">${rec.checkInTime || '-'}</td>
+              <td data-label="Punch Out">${rec.checkOutTime || 'Active'}</td>
+              <td data-label="Duration">${rec.hoursWorked !== null ? `${rec.hoursWorked} hrs` : '-'}</td>
+              <td data-label="Status Flag"><span class="status-badge ${s.cls}">${s.label}</span></td>
             </tr>
           `;
         }).join('');
@@ -1483,16 +1494,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       return `
         <tr>
-          <td><code style="font-size:0.75rem;">${l.date}</code></td>
-          <td>
+          <td data-label="Date"><code style="font-size:0.75rem;">${l.date}</code></td>
+          <td data-label="Employee Name">
             <strong>${l.employeeName}</strong>
             <div style="font-size:0.7rem; color:var(--text-muted);">${l.employeeId}</div>
           </td>
-          <td>${l.department.replace('SS40 ', '')}</td>
-          <td><strong>${l.checkInTime || '-'}</strong></td>
-          <td>${l.checkOutTime || 'Active'}</td>
-          <td>${l.hoursWorked !== null ? `${l.hoursWorked} hrs` : '-'}</td>
-          <td><span class="status-badge ${s.cls}">${s.label}</span></td>
+          <td data-label="Wing">${l.department.replace('SS40 ', '')}</td>
+          <td data-label="Punch In"><strong>${l.checkInTime || '-'}</strong></td>
+          <td data-label="Punch Out">${l.checkOutTime || 'Active'}</td>
+          <td data-label="Duration">${l.hoursWorked !== null ? `${l.hoursWorked} hrs` : '-'}</td>
+          <td data-label="Status Flag"><span class="status-badge ${s.cls}">${s.label}</span></td>
         </tr>
       `;
     }).join('');
@@ -1707,20 +1718,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (changePasswordForm) {
     changePasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const currentPassword = document.getElementById('admin-curr-password')?.value;
-      const newPassword = document.getElementById('admin-new-password')?.value;
-      const confirmPassword = document.getElementById('admin-confirm-password')?.value;
+      const currInput = document.getElementById('admin-curr-password');
+      const newInput = document.getElementById('admin-new-password');
+      const confirmInput = document.getElementById('admin-confirm-password');
+
+      const currentPassword = (currInput?.value || '').trim();
+      const newPassword = (newInput?.value || '').trim();
+      const confirmPassword = (confirmInput?.value || '').trim();
 
       if (!currentPassword) {
-        window.apiService.showToast('Please enter your current admin password', 'warning');
+        window.apiService.showToast('Please enter your current administrator password', 'warning');
+        if (currInput) currInput.focus();
         return;
       }
+
+      // Strict Frontend Verification: Verify current password against database record
+      try {
+        const verifyRes = await window.apiService.verifyPassword(currentPassword);
+        if (!verifyRes.ok || !verifyRes.data.valid) {
+          window.soundFX.playWarningTone();
+          window.apiService.showToast('The current password entered does not match system records.', 'error');
+          if (currInput) {
+            currInput.style.borderColor = 'var(--rose-500)';
+            currInput.focus();
+          }
+          return;
+        }
+        if (currInput) currInput.style.borderColor = 'var(--emerald-500)';
+      } catch (err) {
+        console.warn('Password verification check failed:', err);
+      }
+
       if (!newPassword || newPassword.length < 6) {
-        window.apiService.showToast('New password must be at least 6 characters', 'warning');
+        window.apiService.showToast('New password must be at least 6 characters in length', 'warning');
+        if (newInput) newInput.focus();
+        return;
+      }
+      if (newPassword === currentPassword) {
+        window.apiService.showToast('New password cannot be identical to the current password', 'warning');
+        if (newInput) newInput.focus();
         return;
       }
       if (newPassword !== confirmPassword) {
-        window.apiService.showToast('New passwords do not match', 'error');
+        window.apiService.showToast('New passwords do not match. Please verify confirmation.', 'error');
+        if (confirmInput) confirmInput.focus();
         return;
       }
 
@@ -1728,7 +1769,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res.ok && res.data.success) {
         window.apiService.showToast('Admin password updated successfully! Please note your new password.', 'success');
         changePasswordForm.reset();
+        if (currInput) currInput.style.borderColor = '';
+        if (newInput) newInput.style.borderColor = '';
+        if (confirmInput) confirmInput.style.borderColor = '';
       } else {
+        window.soundFX.playWarningTone();
         window.apiService.showToast(res.data?.message || 'Failed to update password', 'error');
       }
     });
@@ -1749,6 +1794,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         closedEye.style.display = isPassword ? 'block' : 'none';
       }
     });
+  });
+
+  // -------------------------------------------------------------
+  // CLICK OUTSIDE TO CLOSE FOR ALL MODALS / CARDS (Requirement #2)
+  // -------------------------------------------------------------
+  const modalBackdrops = [
+    punchModal,
+    geofenceAlertModal,
+    scanErrorModal,
+    adminLoginModal,
+    employeeModal,
+    idBadgeModal,
+    empHistoryModal,
+    deleteEmpModal
+  ];
+
+  modalBackdrops.forEach(modal => {
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+      // Close when clicking directly on the backdrop/overlay outside the dialog box
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        if (modal === deleteEmpModal) pendingDeleteEmpId = null;
+      }
+    });
+  });
+
+  // ESC key to close any active modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      modalBackdrops.forEach(modal => {
+        if (modal && modal.classList.contains('active')) {
+          modal.classList.remove('active');
+          if (modal === deleteEmpModal) pendingDeleteEmpId = null;
+        }
+      });
+    }
   });
 
   // -------------------------------------------------------------

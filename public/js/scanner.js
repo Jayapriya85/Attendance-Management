@@ -57,7 +57,8 @@ class BarcodeScannerEngine {
       if (!this.html5QrCode) {
         this.html5QrCode = new Html5Qrcode(containerId, {
           formatsToSupport: this.getSupportedFormatsList(),
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+          experimentalFeatures: { useBarCodeDetectorIfSupported: false },
+          verbose: false
         });
       }
 
@@ -128,7 +129,7 @@ class BarcodeScannerEngine {
     try {
       this.html5QrCode = new Html5Qrcode(containerId, {
         formatsToSupport: this.getSupportedFormatsList(),
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+        experimentalFeatures: { useBarCodeDetectorIfSupported: false },
         verbose: false
       });
     } catch (instErr) {
@@ -139,8 +140,13 @@ class BarcodeScannerEngine {
     }
 
     const config = {
-      fps: 15,
-      qrbox: { width: 280, height: 160 }
+      fps: 20,
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        // Broad aspect ratio optimized for Code-128 linear ID card barcodes
+        const w = Math.min(Math.floor(viewfinderWidth * 0.92), 440);
+        const h = Math.min(Math.floor(viewfinderHeight * 0.80), 280);
+        return { width: Math.max(w, 280), height: Math.max(h, 160) };
+      }
     };
 
     const onScan = (decodedText, decodedResult) => {
@@ -206,7 +212,7 @@ class BarcodeScannerEngine {
     }
   }
 
-  startLiveBarcodeDetector() {
+  async startLiveBarcodeDetector() {
     this.stopLiveBarcodeDetector();
 
     if (!('BarcodeDetector' in window)) {
@@ -214,13 +220,20 @@ class BarcodeScannerEngine {
       return;
     }
 
-    console.log('[Scanner] Starting hardware-accelerated native BarcodeDetector loop...');
-    const supportedFormats = ['code_128', 'code_39', 'qr_code', 'ean_13', 'upc_a', 'itf'];
     let detector = null;
     try {
-      detector = new BarcodeDetector({ formats: supportedFormats });
+      const supported = await BarcodeDetector.getSupportedFormats();
+      const targetFormats = ['code_128', 'code_39', 'qr_code', 'ean_13', 'upc_a', 'itf']
+        .filter(f => supported.includes(f));
+
+      if (targetFormats.length === 0) {
+        console.log('[Scanner] Native BarcodeDetector lacks 1D barcode formats. Html5Qrcode ZXing engine handles decoding.');
+        return;
+      }
+      detector = new BarcodeDetector({ formats: targetFormats });
     } catch (e) {
-      detector = new BarcodeDetector();
+      console.warn('[Scanner] BarcodeDetector init notice:', e);
+      return;
     }
 
     const scanFrame = async () => {
@@ -724,7 +737,7 @@ class BarcodeScannerEngine {
     this.stopGuidanceTimer();
     this.guidanceTimer = setTimeout(() => {
       if (this.isCameraRunning) {
-        this.updateHintText('💡 <strong>Guidance:</strong> Hold card steady 15&ndash;20cm away in good lighting, or enter Employee ID in Quick Box below.', true);
+        this.updateHintText('<strong>Tip:</strong> Hold card steady 15&ndash;20cm away in good lighting, or enter Employee ID below.', true);
       }
     }, 7000);
   }

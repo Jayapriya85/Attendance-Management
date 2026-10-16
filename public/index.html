@@ -22,7 +22,7 @@
   </script>
 
   <!-- Application CSS -->
-  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/style.css?v=2.3" />
 </head>
 <body>
 
@@ -43,18 +43,18 @@
         <div class="brand-text">
           <h1>SS40 <span class="brand-accent">NETWORK</span></h1>
           <div class="brand-tagline">
-            <span id="header-brand-tagline">Operations Command Center</span>
+            <span id="header-brand-tagline">Attendance System</span>
           </div>
         </div>
       </div>
 
       <!-- Center: Portal View Switcher -->
       <nav class="nav-pills" aria-label="Portal Navigation">
-        <button id="nav-kiosk-btn" class="nav-pill-btn active" title="Fast Barcode Check-in Terminal">
+        <button id="nav-kiosk-btn" class="nav-pill-btn active" title="Employee Check-in">
           <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
           <span>Employee Check-in</span>
         </button>
-        <button id="nav-admin-btn" class="nav-pill-btn" title="Management & Analytics Dashboard">
+        <button id="nav-admin-btn" class="nav-pill-btn" title="Admin Control Center">
           <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           <span>Admin Control Center</span>
         </button>
@@ -81,7 +81,7 @@
         <button id="audio-toggle-btn" class="header-action-btn" title="Toggle Audio Signals">
           <svg class="icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
         </button>
-        <button id="fullscreen-btn" class="header-action-btn" title="Toggle Fullscreen Kiosk Mode">
+        <button id="fullscreen-btn" class="header-action-btn" title="Toggle Fullscreen Mode">
           <svg class="icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
         </button>
       </div>
@@ -95,17 +95,17 @@
   <main class="app-main">
 
     <!-- =======================================================================
-         VIEW 1: EMPLOYEE FAST CHECK-IN PORTAL / KIOSK
+         VIEW 1: EMPLOYEE CHECK-IN PORTAL / KIOSK
          ======================================================================= -->
     <section id="view-kiosk" class="view-section active">
       <div class="kiosk-grid">
 
-        <!-- Left Column: Dual Scanning Terminal Card -->
+        <!-- Left Column: Scanning Terminal Card -->
         <div class="scanner-terminal-card">
           
           <div class="terminal-header">
             <div class="terminal-title">
-              <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:8px;"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>Attendance Terminal</h2>
+              <h2>ID Card Scanner</h2>
               <p>Scan your employee ID card to mark attendance or manage breaks</p>
             </div>
             
@@ -121,16 +121,15 @@
           <div id="camera-viewport-wrap" class="camera-viewport-container">
             <div id="camera-preview"></div>
 
-            <!-- Aim Frame Overlay with Animated Scanning Laser -->
+            <!-- Aim Frame Overlay -->
             <div class="scan-aim-overlay">
-              <div class="laser-scanner-line"></div>
               <div class="aim-frame">
                 <div class="aim-corner aim-tl"></div>
                 <div class="aim-corner aim-tr"></div>
                 <div class="aim-corner aim-bl"></div>
                 <div class="aim-corner aim-br"></div>
               </div>
-              <div class="aim-caption">Position ID barcode in frame</div>
+              <div class="aim-caption">Align ID card inside frame</div>
             </div>
 
             <!-- Camera Controls -->
@@ -176,11 +175,7 @@
           <!-- Quick Attendance & Break Management Card (Primary Action) -->
           <div class="attendance-actions-card">
             <div class="actions-card-header">
-              <h3>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Attendance & Break Punch
-              </h3>
-              <span id="kiosk-action-state-badge" class="action-state-badge">Ready</span>
+              <h3>Attendance &amp; Breaks</h3>
             </div>
             <p class="actions-card-desc">Scan your card or select an action to mark attendance or breaks:</p>
 
@@ -194,7 +189,7 @@
                 <span>Take Break</span>
               </button>
               <button class="action-punch-btn btn-resume" data-action="BREAK_END" title="Resume shift from break">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 <span>Resume Work</span>
               </button>
               <button class="action-punch-btn btn-checkout" data-action="CHECK_OUT" title="Clock out and end shift">
@@ -222,10 +217,7 @@
           <!-- Geofence Perimeter Card -->
           <div class="geofence-card">
             <div class="geofence-card-header">
-              <div class="geofence-card-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Location & Geofence
-              </div>
-              <span class="status-badge on-time">Within Perimeter</span>
+              <div class="geofence-card-title">Office Geofence Status</div>
             </div>
 
             <div class="geofence-meter-box">
@@ -265,28 +257,31 @@
     <section id="view-admin" class="view-section">
       
       <!-- Admin Sub-Navigation Tabs (Matching Reference Image 1 & 2) -->
-      <div class="admin-tabs-nav">
-        <button class="admin-tab-btn active" data-tab="dashboard">
-          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-          <span>Dashboard</span>
-          <span class="tab-live-badge">LIVE</span>
-        </button>
-        <button class="admin-tab-btn" data-tab="employees">
-          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="11" cy="7" r="4"></circle></svg>
-          <span>Employees</span>
-        </button>
-        <button class="admin-tab-btn" data-tab="logs">
-          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          <span>Reports</span>
-        </button>
-        <button class="admin-tab-btn" data-tab="idcard">
-          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line></svg>
-          <span>ID Badge Studio</span>
-        </button>
-        <button class="admin-tab-btn" data-tab="settings">
-          <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          <span>Settings &amp; Security</span>
-        </button>
+      <div class="admin-tabs-nav-wrapper">
+        <div class="admin-tabs-nav">
+          <button class="admin-tab-btn active" data-tab="dashboard">
+            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            <span>Dashboard</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="employees">
+            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="11" cy="7" r="4"></circle></svg>
+            <span>Employees</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="logs">
+            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>Reports</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="idcard">
+            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line></svg>
+            <span class="tab-label-full">ID Badge Studio</span>
+            <span class="tab-label-short">ID Badge</span>
+          </button>
+          <button class="admin-tab-btn" data-tab="settings">
+            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span class="tab-label-full">Settings &amp; Security</span>
+            <span class="tab-label-short">Settings</span>
+          </button>
+        </div>
       </div>
 
       <!-- TAB 1: ATTENDANCE DASHBOARD (Matching Reference Image 1) -->
@@ -317,9 +312,6 @@
           <div class="dash-stat-card">
             <div class="stat-card-top">
               <span class="stat-card-title">Total Staff</span>
-              <div class="stat-card-icon icon-blue">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              </div>
             </div>
             <div id="stat-total-staff" class="stat-card-number">0</div>
             <div class="stat-card-sub">Registered employees</div>
@@ -329,9 +321,6 @@
           <div class="dash-stat-card">
             <div class="stat-card-top">
               <span class="stat-card-title">Logged In</span>
-              <div class="stat-card-icon icon-green">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              </div>
             </div>
             <div id="stat-logged-in" class="stat-card-number text-emerald">0</div>
             <div class="stat-card-sub text-emerald">Active at desk</div>
@@ -341,9 +330,6 @@
           <div class="dash-stat-card">
             <div class="stat-card-top">
               <span class="stat-card-title">On Break</span>
-              <div class="stat-card-icon icon-amber">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-              </div>
             </div>
             <div id="stat-on-break" class="stat-card-number text-amber">0</div>
             <div class="stat-card-sub">Tea / Coffee</div>
@@ -353,9 +339,6 @@
           <div class="dash-stat-card">
             <div class="stat-card-top">
               <span class="stat-card-title">On Lunch</span>
-              <div class="stat-card-icon icon-orange">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2v20M2 2v6a4 4 0 0 0 4 4v10M6 2v6M10 2v6a4 4 0 0 1-4 4"></path></svg>
-              </div>
             </div>
             <div id="stat-on-lunch" class="stat-card-number text-orange">0</div>
             <div class="stat-card-sub">Lunch hour</div>
@@ -365,9 +348,6 @@
           <div class="dash-stat-card">
             <div class="stat-card-top">
               <span class="stat-card-title">Logged Out</span>
-              <div class="stat-card-icon icon-slate">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              </div>
             </div>
             <div id="stat-logged-out" class="stat-card-number text-slate">0</div>
             <div class="stat-card-sub">Shift completed</div>
@@ -377,9 +357,6 @@
           <div class="dash-stat-card">
             <div class="stat-card-top">
               <span class="stat-card-title">Not Logged In</span>
-              <div class="stat-card-icon icon-rose">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-              </div>
             </div>
             <div id="stat-not-logged-in" class="stat-card-number text-rose">0</div>
             <div class="stat-card-sub">Pending check-in</div>
@@ -435,7 +412,7 @@
               <h3>Company Employee Registry</h3>
               <p>Manage employee records, department assignments, shift allocations, and scannable barcodes</p>
             </div>
-            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <div class="emp-header-controls">
               <input type="text" id="emp-search-input" placeholder="Search by name, ID, or title..." class="form-control" style="width:240px;" />
               <select id="emp-wing-filter" class="form-control" style="width:190px;">
                 <option value="">All Business Wings</option>
@@ -542,8 +519,8 @@
         <div class="card-box">
           <div class="card-box-header">
             <div class="card-box-title">
-              <h3>Official SS40 Digital ID Badge Studio</h3>
-              <p>Dynamic identity badge generator with scannable Code-128 barcode and verified credentials</p>
+              <h3>Employee ID Card Generator</h3>
+              <p>Generate and print scannable employee ID badges with verified credentials</p>
             </div>
             <button class="btn btn-primary" onclick="window.idCardStudio.printBadge()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -551,7 +528,7 @@
             </button>
           </div>
 
-          <!-- Dynamic Employee Selector Toolbar (Requirement #3) -->
+          <!-- Employee Selector Toolbar -->
           <div class="id-badge-selector-toolbar">
             <div class="form-group" style="margin-bottom:0; flex:1; min-width:260px;">
               <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select Personnel</label>
@@ -573,17 +550,13 @@
         </div>
       </div>
 
-      <!-- TAB 5: SYSTEM SETTINGS & SECURITY (Matching Reference Image 2) -->
+      <!-- TAB 5: SYSTEM SETTINGS -->
       <div id="pane-settings" class="admin-tab-pane">
         
         <div class="settings-page-header">
           <div class="settings-header-title">
-            <h2>System Settings &amp; Security</h2>
-            <p>Capture office GPS location, manage administrator credentials, and configure shift rules.</p>
-          </div>
-          <div class="settings-header-badge">
-            <span class="live-pulse-dot"></span>
-            <span>Security Engine Active</span>
+            <h2>System Settings</h2>
+            <p>Manage company office location, administrator credentials, and shift rules.</p>
           </div>
         </div>
 
@@ -596,21 +569,20 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
               </div>
               <div class="settings-card-title">
-                <h3>Office Location &amp; GPS Geofence</h3>
-                <p>Set company physical coordinates for employee attendance verification.</p>
+                <h3>Office Location &amp; Geofence</h3>
+                <p>Set physical company coordinates for attendance perimeter verification.</p>
               </div>
             </div>
 
-            <!-- One-Tap Office Location Lock Highlight Banner -->
+            <!-- Office Location Auto-Detect Banner -->
             <div class="one-tap-location-banner">
               <div class="banner-header-row">
-                <div class="banner-title">One-Tap Office Location Lock</div>
-                <span class="banner-tag">Instant Sync</span>
+                <div class="banner-title">Detect Office Location</div>
               </div>
-              <p class="banner-sub">Stand in the office and click below to store current GPS coordinates automatically.</p>
+              <p class="banner-sub">Click below from within the office to store your current GPS coordinates.</p>
               <button id="btn-use-current-gps" type="button" class="btn-teal-lock" title="Detect device coordinates via GPS">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-                <span>Use My Current Location as Office Location</span>
+                <span>Use Current Location as Office Coordinates</span>
               </button>
               <div id="gps-lock-readout" class="gps-readout-pill" style="display:none;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
@@ -722,15 +694,15 @@
             </form>
           </div>
 
-          <!-- Card 3: Shift Rules & Automated Midnight Reconciler (Matching Reference App Functionality) -->
+          <!-- Card 3: Shift Rules & Nightly Auto-Close -->
           <div class="card-box settings-card settings-card-full">
             <div class="settings-card-header">
               <div class="settings-card-icon icon-teal">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               </div>
               <div class="settings-card-title">
-                <h3>Shift Rules &amp; Automated Midnight Reconciler</h3>
-                <p>Scheduled cron engine that closes unclosed shifts and maintains audited compliance.</p>
+                <h3>Shift Timings &amp; Nightly Auto-Close</h3>
+                <p>Configures daily shift hours and automatically closes pending shifts at midnight.</p>
               </div>
             </div>
 
@@ -754,13 +726,13 @@
                 <div class="reconciler-status-box">
                   <div class="rec-status-line">
                     <span class="live-pulse-dot"></span>
-                    <strong>Daemon Scheduler Active</strong>
+                    <strong>Nightly Auto-Close Active</strong>
                   </div>
-                  <div class="rec-next-run">Next automatic run: <strong>Tonight at 12:00:00 AM IST</strong></div>
+                  <div class="rec-next-run">Next automatic run: <strong>Tonight at 12:00 AM IST</strong></div>
                 </div>
                 <button id="btn-simulate-reconcile" type="button" class="btn btn-outline-teal" style="width:100%; justify-content:center;">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                  Simulate 12:00 AM Auto-Close Now
+                  Run Nightly Auto-Close Now
                 </button>
               </div>
             </div>
@@ -941,21 +913,27 @@
   <div id="admin-login-modal" class="modal-backdrop">
     <div class="modal-window">
       <div class="modal-header">
-        <h3>Administrative Gateway</h3>
+        <h3>Admin Sign In</h3>
         <button id="close-login-modal-btn" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">
         <form id="admin-login-form">
           <div class="form-group">
-            <label>Admin Email</label>
-            <input type="email" id="login-email" class="form-control" value="admin@ss40network.com" required />
+            <label for="login-email">Admin Email</label>
+            <input type="email" id="login-email" class="form-control" placeholder="Enter admin email" value="admin@ss40network.com" required />
           </div>
           <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="login-password" class="form-control" value="admin123" required />
+            <label for="login-password">Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="login-password" class="form-control" placeholder="Enter admin password" value="admin123" required />
+              <button type="button" class="pwd-toggle-btn" data-target="login-password" title="Toggle password visibility" aria-label="Toggle password visibility">
+                <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+              </button>
+            </div>
           </div>
           <div style="margin-top:1.5rem;">
-            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Authenticate Session</button>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Sign In</button>
           </div>
         </form>
       </div>
@@ -968,22 +946,22 @@
   <div id="employee-modal" class="modal-backdrop">
     <div class="modal-window">
       <div class="modal-header">
-        <h3 id="employee-modal-title">Add New SS40 Employee</h3>
+        <h3 id="employee-modal-title">Add New Employee</h3>
         <button id="close-emp-modal-btn" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body">
         <form id="employee-form">
           <div class="form-group">
-            <label>Full Legal Name</label>
-            <input type="text" id="emp-name-input" class="form-control" placeholder="e.g. Ramesh Kumar" required />
+            <label for="emp-name-input">Full Name</label>
+            <input type="text" id="emp-name-input" class="form-control" placeholder="Enter your Fullname" required />
           </div>
           <div class="form-group">
-            <label>Official Email</label>
-            <input type="email" id="emp-email-input" class="form-control" placeholder="ramesh@ss40network.com" required />
+            <label for="emp-email-input">Official Email</label>
+            <input type="email" id="emp-email-input" class="form-control" placeholder="Enter your Email" required />
           </div>
           <div class="form-row-2">
             <div class="form-group">
-              <label>Business Wing / Dept</label>
+              <label for="emp-dept-select">Business Wing / Department</label>
               <select id="emp-dept-select" class="form-control" required>
                 <option value="SS40 Digital Solutions">SS40 Digital Solutions</option>
                 <option value="SS40 SaaS Products">SS40 SaaS Products</option>
@@ -992,17 +970,17 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Designation</label>
-              <input type="text" id="emp-designation-input" class="form-control" placeholder="Full-Stack Engineer" required />
+              <label for="emp-designation-input">Designation</label>
+              <input type="text" id="emp-designation-input" class="form-control" placeholder="Enter your Designation" required />
             </div>
           </div>
           <div class="form-row-2">
             <div class="form-group">
-              <label>Phone Number</label>
-              <input type="text" id="emp-phone-input" class="form-control" placeholder="+91 98765 43210" required />
+              <label for="emp-phone-input">Contact Phone</label>
+              <input type="text" id="emp-phone-input" class="form-control" placeholder="Enter your Phone" required />
             </div>
             <div class="form-group">
-              <label>Blood Group</label>
+              <label for="emp-blood-select">Blood Group</label>
               <select id="emp-blood-select" class="form-control">
                 <option value="O+">O+</option>
                 <option value="A+">A+</option>
@@ -1016,11 +994,11 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Emergency Contact Phone</label>
-            <input type="text" id="emp-emergency-input" class="form-control" placeholder="+91 94421 88200" />
+            <label for="emp-emergency-input">Emergency Contact Phone</label>
+            <input type="text" id="emp-emergency-input" class="form-control" placeholder="Enter your Emergency Contact" />
           </div>
           <div style="margin-top:1.5rem;">
-            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save Employee Credentials</button>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save Employee</button>
           </div>
         </form>
       </div>
@@ -1111,20 +1089,20 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           </div>
           <div>
-            <h3 style="margin:0; font-size:1.05rem;">Confirm Permanent Deletion</h3>
-            <p style="margin:0; font-size:0.72rem; color:var(--text-muted);">Administrative record purge</p>
+            <h3 style="margin:0; font-size:1.05rem;">Delete Employee</h3>
+            <p style="margin:0; font-size:0.72rem; color:var(--text-muted);">This action cannot be undone</p>
           </div>
         </div>
         <button id="close-delete-emp-modal-btn" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body" style="padding-top:0.75rem;">
         <p style="font-size:0.85rem; color:var(--text-main); margin-bottom:1rem; line-height:1.5;">
-          Are you sure you want to permanently remove employee <strong id="delete-emp-name-target" style="color:var(--navy-900);"></strong> (<span id="delete-emp-id-target" style="font-family:monospace; font-weight:700; color:var(--rose-600);"></span>) from the organization records?
+          Are you sure you want to remove employee <strong id="delete-emp-name-target" style="color:var(--navy-900);"></strong> (<span id="delete-emp-id-target" style="font-family:monospace; font-weight:700; color:var(--rose-600);"></span>)?
         </p>
         <div style="background:var(--rose-50); border:1px solid var(--rose-border); border-radius:var(--radius-md); padding:0.85rem; margin-bottom:1.25rem;">
-          <div style="font-size:0.72rem; font-weight:800; color:var(--rose-600); letter-spacing:0.5px; margin-bottom:0.25rem;">IRREVERSIBLE ACTION</div>
+          <div style="font-size:0.72rem; font-weight:800; color:var(--rose-600); letter-spacing:0.5px; margin-bottom:0.25rem;">WARNING</div>
           <div style="font-size:0.76rem; color:#7F1D1D; line-height:1.45;">
-            This operation will permanently purge this employee's credentials, active barcode, and all historical attendance logs from the database.
+            This will permanently delete this employee's profile, ID barcode, and associated attendance records.
           </div>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:0.6rem;">

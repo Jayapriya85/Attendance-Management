@@ -82,16 +82,16 @@ class IdCardStudio {
       </div>
     `;
 
-    // Render Crisp Code-128 Barcode via JsBarcode without text collision
+    // Render Crisp Code-128 Barcode via JsBarcode with high optical contrast for camera scanning
     try {
       if (typeof JsBarcode !== 'undefined') {
         JsBarcode('#' + barcodeSvgId, employee.barcode || employee.id, {
           format: 'CODE128',
-          lineColor: '#0F172A',
-          width: 1.5,
-          height: 36,
+          lineColor: '#000000',
+          width: 1.8,
+          height: 44,
           displayValue: false,
-          margin: 0
+          margin: 4
         });
       }
     } catch (e) {

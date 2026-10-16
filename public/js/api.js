@@ -50,6 +50,13 @@ class ApiService {
     return this.request('/api/auth/verify');
   }
 
+  async verifyPassword(password) {
+    return this.request('/api/auth/verify-password', {
+      method: 'POST',
+      body: JSON.stringify({ password })
+    });
+  }
+
   async changePassword(currentPassword, newPassword, confirmPassword) {
     return this.request('/api/auth/change-password', {
       method: 'POST',

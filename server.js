@@ -55,11 +55,18 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const cleanUsername = username.trim().toLowerCase();
+    if (cleanUsername !== 'admin@ss40network.com' && cleanUsername !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid administrative credentials. Please verify your email and password.'
+      });
+    }
+
     const admin = await db.getAdminUser(cleanUsername);
+    const validPassword = admin?.passwordHash || 'admin123';
 
-    const isMasterAdmin = (cleanUsername === 'admin@ss40network.com' || cleanUsername === 'admin') && password === 'admin123';
-
-    if (isMasterAdmin || (admin && (admin.passwordHash === password || password === 'admin123'))) {
+    // Strictly authenticate ONLY against the active/current password
+    if (password === validPassword) {
       const activeAdmin = admin || {
         name: 'SS40 Systems Administrator',
         username: 'admin@ss40network.com',
@@ -100,29 +107,53 @@ app.get('/api/auth/verify', async (req, res) => {
   return res.json({ authenticated: false });
 });
 
+app.post('/api/auth/verify-password', async (req, res) => {
+  try {
+    const password = String(req.body.password || '').trim();
+    if (!password) {
+      return res.status(400).json({ success: false, valid: false, message: 'Password is required' });
+    }
+    const admin = await db.getAdminUser('admin@ss40network.com');
+    const validPassword = String(admin?.passwordHash || '').trim();
+    const isValid = Boolean(validPassword && password === validPassword);
+    return res.json({ success: true, valid: isValid });
+  } catch (err) {
+    return res.status(500).json({ success: false, valid: false, message: 'Verification error' });
+  }
+});
+
 app.post('/api/auth/change-password', async (req, res) => {
   try {
-    const { currentPassword, newPassword, confirmPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Current password and new password are required' });
+    const currentPassword = String(req.body.currentPassword || '').trim();
+    const newPassword = String(req.body.newPassword || '').trim();
+    const confirmPassword = String(req.body.confirmPassword || '').trim();
+
+    if (!currentPassword) {
+      return res.status(400).json({ success: false, message: 'Please enter your current administrator password.' });
+    }
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters in length.' });
     }
     if (newPassword !== confirmPassword) {
-      return res.status(400).json({ success: false, message: 'New password and confirmation do not match' });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters in length' });
+      return res.status(400).json({ success: false, message: 'New password and confirmation password do not match.' });
     }
 
     const admin = await db.getAdminUser('admin@ss40network.com');
-    if (!admin || (admin.passwordHash !== currentPassword && currentPassword !== 'admin123')) {
-      return res.status(401).json({ success: false, message: 'Current password entered is incorrect' });
+    const validPassword = String(admin?.passwordHash || '').trim();
+
+    if (!validPassword || currentPassword !== validPassword) {
+      return res.status(401).json({ success: false, message: 'The current password you entered is incorrect. Access denied.' });
+    }
+
+    if (newPassword === validPassword) {
+      return res.status(400).json({ success: false, message: 'New password cannot be identical to the current password. Please choose a different password.' });
     }
 
     await db.updateAdminPassword('admin@ss40network.com', newPassword);
-    res.json({ success: true, message: 'Administrator password updated successfully' });
+    res.json({ success: true, message: 'Administrator password updated successfully.' });
   } catch (err) {
     console.error('Change password error:', err);
-    res.status(500).json({ success: false, message: 'Failed to update administrator password' });
+    res.status(500).json({ success: false, message: 'Failed to update administrator password.' });
   }
 });
 
@@ -397,15 +428,14 @@ app.post('/api/attendance/punch', async (req, res) => {
       settings.officeLng
     );
 
-    // Strict radius check with development demoMode override option
-    const isForceInside = settings.demoMode === 'FORCE_INSIDE';
-    const isInside = isForceInside || (distanceMeters <= settings.radiusMeters);
+    // Strict physical geofence verification
+    const isInside = distanceMeters <= settings.radiusMeters;
 
     if (!isInside) {
       return res.status(403).json({
         success: false,
         code: 'GEOFENCE_VIOLATION',
-        message: 'You are outside the SS40 Network office premises. Please move to the designated work zone.',
+        message: `You are outside the SS40 Network office premises (${Math.round(distanceMeters)}m away; allowed: ${settings.radiusMeters}m). Attendance access is blocked.`,
         employee: {
           id: employee.id,
           name: employee.name,

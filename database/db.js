@@ -188,10 +188,16 @@ async function updateAdminPassword(email, newPassword) {
   }
 
   const local = readLocalDb();
-  if (local.admin) {
-    local.admin.passwordHash = newPassword;
-    writeLocalDb(local);
+  if (!local.admin) {
+    local.admin = {
+      id: 1,
+      username: 'admin@ss40network.com',
+      name: 'SS40 Systems Administrator',
+      role: 'Super Admin'
+    };
   }
+  local.admin.passwordHash = newPassword;
+  writeLocalDb(local);
   return true;
 }
 
