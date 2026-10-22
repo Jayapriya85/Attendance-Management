@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   
   <!-- Vendor Libraries -->
+  <script src="/vendor/qrcode.min.js"></script>
   <script src="/vendor/jsbarcode.min.js"></script>
   <script src="/vendor/html5-qrcode.min.js"></script>
   <script>
@@ -129,7 +130,7 @@
                 <div class="aim-corner aim-bl"></div>
                 <div class="aim-corner aim-br"></div>
               </div>
-              <div class="aim-caption">Align ID card inside frame</div>
+              <div class="aim-caption">Align QR Code inside frame</div>
             </div>
 
             <!-- Camera Controls -->
@@ -233,7 +234,11 @@
             <div class="office-coords-list">
               <div class="coords-row">
                 <span>Office Location:</span>
-                <span class="val">Sree Puram, Tirunelveli</span>
+                <span class="val" id="kiosk-office-name">Sree Puram, Tirunelveli</span>
+              </div>
+              <div class="coords-row">
+                <span>Coordinates:</span>
+                <span class="val" id="kiosk-office-coords">8.72851, 77.72744 (±150m)</span>
               </div>
               <div class="coords-row">
                 <span>Shift Schedule:</span>

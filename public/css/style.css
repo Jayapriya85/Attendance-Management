@@ -591,11 +591,11 @@ a {
 
 .aim-frame {
   position: relative;
-  width: 280px;
-  height: 190px;
+  width: 220px;
+  height: 220px;
   background: transparent !important;
-  border: 2px dashed rgba(45, 212, 191, 0.4);
-  border-radius: 12px;
+  border: 2px dashed rgba(45, 212, 191, 0.45);
+  border-radius: 14px;
   box-shadow: 0 0 0 9999px rgba(7, 13, 24, 0.65);
 }
 
@@ -650,8 +650,8 @@ a {
 .laser-scanner-line {
   position: absolute;
   top: 50%;
-  left: calc(50% - 130px);
-  width: 260px;
+  left: calc(50% - 95px);
+  width: 190px;
   height: 2.5px;
   background: linear-gradient(90deg, transparent, #2DD4BF, #FFFFFF, #2DD4BF, transparent);
   box-shadow: 0 0 10px #14B8A6, 0 0 20px #2DD4BF;
@@ -662,7 +662,7 @@ a {
 
 @keyframes laserSweep {
   0% {
-    transform: translateY(-70px);
+    transform: translateY(-90px);
     opacity: 0.4;
   }
 
@@ -671,7 +671,7 @@ a {
   }
 
   100% {
-    transform: translateY(70px);
+    transform: translateY(90px);
     opacity: 0.4;
   }
 }
@@ -3402,11 +3402,33 @@ a {
 
 .id-card-barcode-wrap {
   margin-top: auto;
-  padding-top: 0.65rem;
+  padding-top: 0.5rem;
   padding-bottom: 0.35rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.id-card-qr-box {
+  width: 110px;
+  height: 110px;
+  background: #FFFFFF;
+  padding: 7px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.id-card-qr-box canvas,
+.id-card-qr-box img,
+.id-card-qr-box svg {
+  display: block;
+  width: 96px !important;
+  height: 96px !important;
 }
 
 .id-card-barcode-svg {
@@ -3967,9 +3989,9 @@ a {
   }
 
   .aim-frame {
-    width: 76%;
-    max-width: 230px;
-    height: 120px;
+    width: 160px;
+    height: 160px;
+    max-width: 160px;
   }
 
   .terminal-footer {
@@ -4545,9 +4567,9 @@ a {
   }
 
   .aim-frame {
-    width: 80%;
-    max-width: 210px;
-    height: 105px;
+    width: 150px;
+    height: 150px;
+    max-width: 150px;
   }
 
   .terminal-footer {

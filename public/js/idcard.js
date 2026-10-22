@@ -20,7 +20,8 @@ class IdCardStudio {
     const shiftVal = employee.shiftSchedule || employee.shift || '09:30 - 18:30';
     const bloodVal = employee.bloodGroup || 'O+';
     const emergencyVal = employee.emergencyContact || '+91 94421 88299';
-    const barcodeSvgId = 'badge-barcode-' + Math.random().toString(36).substr(2, 9);
+    const cleanCode = (employee.barcode || employee.id || '').trim();
+    const qrContainerId = 'badge-qr-' + Math.random().toString(36).substr(2, 9);
 
     container.innerHTML = `
       <div class="id-card-corporate" id="printable-id-card">
@@ -72,20 +73,34 @@ class IdCardStudio {
             </div>
           </div>
 
-          <!-- Scannable Code-128 Barcode Section -->
+          <!-- Scannable 2D QR Code Section -->
           <div class="id-card-barcode-wrap">
-            <svg id="${barcodeSvgId}" class="id-card-barcode-svg"></svg>
-            <div class="id-card-barcode-val">${employee.barcode || employee.id}</div>
+            <div id="${qrContainerId}" class="id-card-qr-box"></div>
+            <div class="id-card-barcode-val">${cleanCode}</div>
             <div class="id-card-footer-cin">CIN: U72900TN2023PTC160892 • MUNICIPAL INCUBATION CENTRE</div>
           </div>
         </div>
       </div>
     `;
 
-    // Render Crisp Code-128 Barcode via JsBarcode with high optical contrast for camera scanning
+    // Render Crisp 2D QR Code via QRCode.js (110x110px with optical quiet zone)
     try {
-      if (typeof JsBarcode !== 'undefined') {
-        JsBarcode('#' + barcodeSvgId, employee.barcode || employee.id, {
+      const qrEl = document.getElementById(qrContainerId);
+      if (qrEl && typeof QRCode !== 'undefined') {
+        new QRCode(qrEl, {
+          text: cleanCode,
+          width: 96,
+          height: 96,
+          colorDark: '#000000',
+          colorLight: '#FFFFFF',
+          correctLevel: (typeof QRCode.CorrectLevel !== 'undefined') ? QRCode.CorrectLevel.M : 0
+        });
+      } else if (qrEl && typeof JsBarcode !== 'undefined') {
+        // Fallback to JsBarcode if QRCode library is unavailable
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.className = 'id-card-barcode-svg';
+        qrEl.appendChild(svg);
+        JsBarcode(svg, cleanCode, {
           format: 'CODE128',
           lineColor: '#000000',
           width: 1.8,
@@ -95,7 +110,7 @@ class IdCardStudio {
         });
       }
     } catch (e) {
-      console.warn('JsBarcode render error:', e);
+      console.warn('QR Code render error:', e);
     }
   }
 

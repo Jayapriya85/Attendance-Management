@@ -147,6 +147,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
+    const kioskOfficeName = document.getElementById('kiosk-office-name');
+    if (kioskOfficeName && state.office) {
+      if (state.office.address && state.office.address.includes('Tirunelveli')) {
+        kioskOfficeName.textContent = 'Sree Puram, Tirunelveli';
+      } else if (state.office.address) {
+        kioskOfficeName.textContent = state.office.address;
+      }
+    }
+
     if (kioskOfficeTarget && state.office) {
       kioskOfficeTarget.textContent = `${state.office.lat.toFixed(5)}, ${state.office.lng.toFixed(5)} (±${state.radius}m)`;
     }

@@ -38,6 +38,8 @@ class BarcodeScannerEngine {
 
     if (H) {
       return [
+        H.QR_CODE,
+        H.DATA_MATRIX,
         H.CODE_128,
         H.CODE_39,
         H.CODE_93,
@@ -47,14 +49,12 @@ class BarcodeScannerEngine {
         H.UPC_A,
         H.UPC_E,
         H.ITF,
-        H.QR_CODE,
-        H.DATA_MATRIX,
         H.PDF_417
       ];
     }
-    // Explicit fallback integer enum mapping for Html5QrcodeSupportedFormats:
-    // CODE_128=5, CODE_39=3, CODE_93=4, CODABAR=2, EAN_13=9, EAN_8=10, UPC_A=14, UPC_E=15, ITF=8, QR_CODE=0, DATA_MATRIX=6, PDF_417=11
-    return [5, 3, 4, 2, 9, 10, 14, 15, 8, 0, 6, 11];
+    // Explicit fallback integer enum mapping with QR_CODE=0 as primary:
+    // QR_CODE=0, DATA_MATRIX=6, CODE_128=5, CODE_39=3, CODE_93=4, CODABAR=2, EAN_13=9, EAN_8=10, UPC_A=14, UPC_E=15, ITF=8, PDF_417=11
+    return [0, 6, 5, 3, 4, 2, 9, 10, 14, 15, 8, 11];
   }
 
   // -----------------------------------------------------------------
@@ -153,9 +153,16 @@ class BarcodeScannerEngine {
       return false;
     }
 
-    // Decoder configuration: scanning entire camera feed with continuous scan & focus
+    // Decoder configuration: scanning camera feed with 1:1 square QrBox optimized for 2D QR codes
     const config = {
       fps: 25,
+      qrbox: (viewfinderWidth, viewfinderHeight) => {
+        const isMobileScreen = window.innerWidth <= 640 || isMobile;
+        const targetSize = isMobileScreen ? 160 : 220;
+        const maxEdge = Math.min(viewfinderWidth - 16, viewfinderHeight - 16);
+        const edge = Math.min(targetSize, Math.max(maxEdge, 120));
+        return { width: edge, height: edge };
+      },
       aspectRatio: 1.777778,
       videoConstraints: {
         facingMode: isMobile ? 'environment' : 'user',
@@ -176,7 +183,7 @@ class BarcodeScannerEngine {
       this.isCameraRunning = true;
       this.updateAimOverlay(true);
       this.updateToggleButtonState(true);
-      this.updateHintText('Scanner Active: Position ID barcode 15&ndash;20cm from camera', false);
+      this.updateHintText('Scanner Active: Align QR Code inside frame', false);
       this.startGuidanceTimer();
       console.log(`[Scanner] Camera stream active via: ${label}`);
       const shaded = document.getElementById('qr-shaded-region');
@@ -259,6 +266,8 @@ class BarcodeScannerEngine {
     try {
       const supported = await BarcodeDetector.getSupportedFormats();
       const targetFormats = [
+        'qr_code',
+        'data_matrix',
         'code_128',
         'code_39',
         'code_93',
@@ -268,8 +277,6 @@ class BarcodeScannerEngine {
         'itf',
         'upc_a',
         'upc_e',
-        'qr_code',
-        'data_matrix',
         'aztec',
         'pdf417'
       ].filter(f => supported.includes(f));
@@ -532,7 +539,7 @@ class BarcodeScannerEngine {
       if ('BarcodeDetector' in window) {
         try {
           const supportedFormats = await BarcodeDetector.getSupportedFormats();
-          const targetFormats = ['code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e', 'itf']
+          const targetFormats = ['qr_code', 'data_matrix', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf']
             .filter(f => supportedFormats.includes(f));
 
           if (targetFormats.length > 0) {
@@ -568,7 +575,7 @@ class BarcodeScannerEngine {
           if ('BarcodeDetector' in window && !detectedCode) {
             try {
               const supported = await BarcodeDetector.getSupportedFormats();
-              const target = ['code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e']
+              const target = ['qr_code', 'data_matrix', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e']
                 .filter(f => supported.includes(f));
               if (target.length > 0) {
                 const detector = new BarcodeDetector({ formats: target });
@@ -746,7 +753,7 @@ class BarcodeScannerEngine {
     this.lastScanTimestamp = now;
 
     // Reset camera guidance and show scanned status
-    this.updateHintText(`Barcode detected: <strong style="font-family:monospace;">${clean}</strong>. Verifying attendance...`, false);
+    this.updateHintText(`QR Code detected: <strong style="font-family:monospace;">${clean}</strong>. Verifying attendance...`, false);
     this.startGuidanceTimer();
 
     // Trigger visual aim frame pulse
@@ -785,7 +792,7 @@ class BarcodeScannerEngine {
     this.stopGuidanceTimer();
     this.guidanceTimer = setTimeout(() => {
       if (this.isCameraRunning) {
-        this.updateHintText('<strong>Tip:</strong> Hold card steady 15&ndash;20cm away in good lighting, or enter Employee ID below.', true);
+        this.updateHintText('<strong>Tip:</strong> Align QR Code inside frame in good lighting, or enter Employee ID below.', true);
       }
     }, 7000);
   }
