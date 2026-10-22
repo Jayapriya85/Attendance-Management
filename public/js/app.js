@@ -241,7 +241,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 2. Client-side precise distance check against office perimeter
+    // 2. Client-side precise distance check against office perimeter (allowed radius: 150m for Sree Puram, Tirunelveli)
+    const allowedRadius = window.geofenceMgr.allowedRadiusMeters || 150;
     const officeDist = window.geofenceMgr.calculateDistance(
       coords.lat,
       coords.lng,
@@ -249,13 +250,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.geofenceMgr.officeCoords.lng
     );
 
-    // If outside the allowed perimeter, strictly block attendance check-in
-    if (officeDist > window.geofenceMgr.allowedRadiusMeters) {
+    // If outside the allowed perimeter, strictly block attendance check-in and reject scan
+    if (officeDist > allowedRadius) {
       const emp = cachedEmployees ? cachedEmployees.find(e => e.id === cleanId || e.barcode === cleanId) : null;
       window.soundFX.playWarningTone();
       showGeofenceWarningModal({
         code: 'GEOFENCE_VIOLATION',
-        message: 'You are outside the SS40 Network office premises. Please move to the designated work zone.',
+        status: 'Absent',
+        message: 'You are not in the range',
         employee: {
           id: cleanId,
           name: emp ? emp.name : cleanId
@@ -264,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           officeName: 'SS40 Network Private Limited',
           officeAddress: window.geofenceMgr.officeCoords.address,
           distanceMeters: officeDist,
-          allowedRadiusMeters: window.geofenceMgr.allowedRadiusMeters,
+          allowedRadiusMeters: allowedRadius,
           userCoords: coords,
           officeCoords: window.geofenceMgr.officeCoords
         }
@@ -458,7 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     box.style.display = 'block';
   }
 
-  // Show Stylized Geofence Warning Modal
+  // Show Stylized Geofence Warning Modal stating: "You are not in the range"
   function showGeofenceWarningModal(data) {
     if (!geofenceAlertModal) return;
 
@@ -466,18 +468,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const radiusVal = document.getElementById('geo-alert-radius');
     const empInfo = document.getElementById('geo-alert-emp');
     const officeAddr = document.getElementById('geo-alert-address');
+    const warningQuote = geofenceAlertModal.querySelector('.geofence-warning-quote');
+    const modalHeaderTitle = geofenceAlertModal.querySelector('.geofence-alert-header h3');
+
+    if (warningQuote) {
+      warningQuote.textContent = '“You are not in the range”';
+    }
+    if (modalHeaderTitle) {
+      modalHeaderTitle.textContent = 'YOU ARE NOT IN THE RANGE';
+    }
 
     if (distVal && data.geofence) {
       distVal.textContent = window.geofenceMgr.formatDistance(data.geofence.distanceMeters);
     }
     if (radiusVal && data.geofence) {
-      radiusVal.textContent = `${data.geofence.allowedRadiusMeters} meters`;
+      radiusVal.textContent = `${data.geofence.allowedRadiusMeters || 150} meters`;
     }
     if (empInfo && data.employee) {
       empInfo.textContent = `${data.employee.name} (${data.employee.id})`;
     }
     if (officeAddr && data.geofence) {
       officeAddr.textContent = data.geofence.officeAddress;
+    }
+
+    if (window.apiService && window.apiService.showToast) {
+      window.apiService.showToast('You are not in the range', 'danger');
     }
 
     geofenceAlertModal.classList.add('active');
@@ -599,11 +614,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusVal.innerHTML = `<span class="status-badge on-time">Working</span>`;
       } else {
         const statusMap = {
-          ON_TIME: { label: 'On-Time', cls: 'on-time' },
-          GRACE_PERIOD: { label: 'Grace Period', cls: 'grace' },
-          LATE: { label: 'Late Coming', cls: 'late' },
+          PRESENT: { label: 'Present', cls: 'on-time' },
+          Present: { label: 'Present', cls: 'on-time' },
+          ON_TIME: { label: 'Present (On-Time)', cls: 'on-time' },
+          GRACE_PERIOD: { label: 'Present (Grace Period)', cls: 'grace' },
+          LATE: { label: 'Present (Late Coming)', cls: 'late' },
           EARLY_LEAVING: { label: 'Early Leaving', cls: 'early' },
-          OVERTIME: { label: 'Overtime', cls: 'overtime' }
+          OVERTIME: { label: 'Overtime', cls: 'overtime' },
+          ABSENT: { label: 'Absent', cls: 'danger' },
+          Absent: { label: 'Absent', cls: 'danger' }
         };
         const s = statusMap[data.status] || { label: data.status, cls: 'on-time' };
         statusVal.innerHTML = `<span class="status-badge ${s.cls}">${s.label}</span>`;
@@ -1358,11 +1377,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         histTbody.innerHTML = d.recentAttendance.map(rec => {
           const statusMap = {
-            ON_TIME: { label: 'On-Time', cls: 'on-time' },
-            GRACE_PERIOD: { label: 'Grace', cls: 'grace' },
-            LATE: { label: 'Late', cls: 'late' },
+            PRESENT: { label: 'Present', cls: 'on-time' },
+            Present: { label: 'Present', cls: 'on-time' },
+            ON_TIME: { label: 'Present (On-Time)', cls: 'on-time' },
+            GRACE_PERIOD: { label: 'Present (Grace)', cls: 'grace' },
+            LATE: { label: 'Present (Late)', cls: 'late' },
             EARLY_LEAVING: { label: 'Early Leave', cls: 'early' },
-            OVERTIME: { label: 'Overtime', cls: 'overtime' }
+            OVERTIME: { label: 'Overtime', cls: 'overtime' },
+            ABSENT: { label: 'Absent', cls: 'danger' },
+            Absent: { label: 'Absent', cls: 'danger' }
           };
           const s = statusMap[rec.status] || { label: rec.status, cls: 'on-time' };
 
@@ -1484,11 +1507,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     tbody.innerHTML = logs.map(l => {
       const statusMap = {
-        ON_TIME: { label: 'On-Time', cls: 'on-time' },
-        GRACE_PERIOD: { label: 'Grace Period', cls: 'grace' },
-        LATE: { label: 'Late', cls: 'late' },
+        PRESENT: { label: 'Present', cls: 'on-time' },
+        Present: { label: 'Present', cls: 'on-time' },
+        ON_TIME: { label: 'Present (On-Time)', cls: 'on-time' },
+        GRACE_PERIOD: { label: 'Present (Grace Period)', cls: 'grace' },
+        LATE: { label: 'Present (Late)', cls: 'late' },
         EARLY_LEAVING: { label: 'Early Leave', cls: 'early' },
-        OVERTIME: { label: 'Overtime', cls: 'overtime' }
+        OVERTIME: { label: 'Overtime', cls: 'overtime' },
+        ABSENT: { label: 'Absent', cls: 'danger' },
+        Absent: { label: 'Absent', cls: 'danger' }
       };
       const s = statusMap[l.status] || { label: l.status, cls: 'on-time' };
 

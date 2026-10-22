@@ -30,17 +30,31 @@ class BarcodeScannerEngine {
   }
 
   getSupportedFormatsList() {
-    if (typeof Html5QrcodeSupportedFormats !== 'undefined') {
+    const H = (typeof Html5QrcodeSupportedFormats !== 'undefined')
+      ? Html5QrcodeSupportedFormats
+      : (typeof window !== 'undefined' && window.Html5QrcodeSupportedFormats)
+        ? window.Html5QrcodeSupportedFormats
+        : null;
+
+    if (H) {
       return [
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.ITF
+        H.CODE_128,
+        H.CODE_39,
+        H.CODE_93,
+        H.CODABAR,
+        H.EAN_13,
+        H.EAN_8,
+        H.UPC_A,
+        H.UPC_E,
+        H.ITF,
+        H.QR_CODE,
+        H.DATA_MATRIX,
+        H.PDF_417
       ];
     }
-    return undefined;
+    // Explicit fallback integer enum mapping for Html5QrcodeSupportedFormats:
+    // CODE_128=5, CODE_39=3, CODE_93=4, CODABAR=2, EAN_13=9, EAN_8=10, UPC_A=14, UPC_E=15, ITF=8, QR_CODE=0, DATA_MATRIX=6, PDF_417=11
+    return [5, 3, 4, 2, 9, 10, 14, 15, 8, 0, 6, 11];
   }
 
   // -----------------------------------------------------------------
@@ -57,7 +71,7 @@ class BarcodeScannerEngine {
       if (!this.html5QrCode) {
         this.html5QrCode = new Html5Qrcode(containerId, {
           formatsToSupport: this.getSupportedFormatsList(),
-          experimentalFeatures: { useBarCodeDetectorIfSupported: false },
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
           verbose: false
         });
       }
@@ -125,11 +139,11 @@ class BarcodeScannerEngine {
       previewContainer.innerHTML = '';
     }
 
-    // 3. Create fresh Html5Qrcode instance
+    // 3. Create fresh Html5Qrcode instance with 1D formats and hardware acceleration
     try {
       this.html5QrCode = new Html5Qrcode(containerId, {
         formatsToSupport: this.getSupportedFormatsList(),
-        experimentalFeatures: { useBarCodeDetectorIfSupported: false },
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true },
         verbose: false
       });
     } catch (instErr) {
@@ -139,13 +153,14 @@ class BarcodeScannerEngine {
       return false;
     }
 
+    // Decoder configuration: scanning entire camera feed with continuous scan & focus
     const config = {
-      fps: 20,
-      qrbox: (viewfinderWidth, viewfinderHeight) => {
-        // Broad aspect ratio optimized for Code-128 linear ID card barcodes
-        const w = Math.min(Math.floor(viewfinderWidth * 0.92), 440);
-        const h = Math.min(Math.floor(viewfinderHeight * 0.80), 280);
-        return { width: Math.max(w, 280), height: Math.max(h, 160) };
+      fps: 25,
+      aspectRatio: 1.777778,
+      videoConstraints: {
+        facingMode: isMobile ? 'environment' : 'user',
+        focusMode: 'continuous',
+        advanced: [{ focusMode: 'continuous' }]
       }
     };
 
@@ -164,6 +179,25 @@ class BarcodeScannerEngine {
       this.updateHintText('Scanner Active: Position ID barcode 15&ndash;20cm from camera', false);
       this.startGuidanceTimer();
       console.log(`[Scanner] Camera stream active via: ${label}`);
+      const shaded = document.getElementById('qr-shaded-region');
+      if (shaded) {
+        shaded.style.display = 'none';
+        shaded.style.background = 'transparent';
+      }
+
+      // Ensure camera continuous auto-focus is applied to the video track if supported
+      const videoEl = document.querySelector('#camera-preview video');
+      if (videoEl && videoEl.srcObject) {
+        try {
+          const track = videoEl.srcObject.getVideoTracks()[0];
+          if (track && track.applyConstraints) {
+            track.applyConstraints({
+              advanced: [{ focusMode: 'continuous' }]
+            }).catch(() => {});
+          }
+        } catch (e) {}
+      }
+
       this.startLiveBarcodeDetector();
     };
 
@@ -191,6 +225,7 @@ class BarcodeScannerEngine {
       try {
         this.html5QrCode = new Html5Qrcode(containerId, {
           formatsToSupport: this.getSupportedFormatsList(),
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
           verbose: false
         });
 
@@ -223,8 +258,21 @@ class BarcodeScannerEngine {
     let detector = null;
     try {
       const supported = await BarcodeDetector.getSupportedFormats();
-      const targetFormats = ['code_128', 'code_39', 'qr_code', 'ean_13', 'upc_a', 'itf']
-        .filter(f => supported.includes(f));
+      const targetFormats = [
+        'code_128',
+        'code_39',
+        'code_93',
+        'codabar',
+        'ean_13',
+        'ean_8',
+        'itf',
+        'upc_a',
+        'upc_e',
+        'qr_code',
+        'data_matrix',
+        'aztec',
+        'pdf417'
+      ].filter(f => supported.includes(f));
 
       if (targetFormats.length === 0) {
         console.log('[Scanner] Native BarcodeDetector lacks 1D barcode formats. Html5Qrcode ZXing engine handles decoding.');
@@ -258,16 +306,16 @@ class BarcodeScannerEngine {
       }
 
       if (this.isCameraRunning) {
-        this.liveScanTimer = setTimeout(scanFrame, 90);
+        this.liveScanTimer = setTimeout(scanFrame, 60);
       }
     };
 
-    // Give camera 250ms to initialize first frame
+    // Give camera 150ms to initialize first frame
     setTimeout(() => {
       if (this.isCameraRunning) {
         scanFrame();
       }
-    }, 250);
+    }, 150);
   }
 
   stopLiveBarcodeDetector() {

@@ -157,11 +157,15 @@ class AttendanceHeatmap {
               <tbody>
                 ${records.map(r => {
                   const statusMap = {
-                    ON_TIME: { label: 'On-Time', cls: 'on-time' },
-                    GRACE_PERIOD: { label: 'Grace Period', cls: 'grace' },
-                    LATE: { label: 'Late Coming', cls: 'late' },
+                    PRESENT: { label: 'Present', cls: 'on-time' },
+                    Present: { label: 'Present', cls: 'on-time' },
+                    ON_TIME: { label: 'Present (On-Time)', cls: 'on-time' },
+                    GRACE_PERIOD: { label: 'Present (Grace Period)', cls: 'grace' },
+                    LATE: { label: 'Present (Late Coming)', cls: 'late' },
                     EARLY_LEAVING: { label: 'Early Leave', cls: 'early' },
-                    OVERTIME: { label: 'Overtime', cls: 'overtime' }
+                    OVERTIME: { label: 'Overtime', cls: 'overtime' },
+                    ABSENT: { label: 'Absent', cls: 'danger' },
+                    Absent: { label: 'Absent', cls: 'danger' }
                   };
                   const s = statusMap[r.status] || { label: r.status, cls: 'on-time' };
 

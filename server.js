@@ -428,14 +428,16 @@ app.post('/api/attendance/punch', async (req, res) => {
       settings.officeLng
     );
 
-    // Strict physical geofence verification
-    const isInside = distanceMeters <= settings.radiusMeters;
+    // Strict physical geofence verification (allowed radius: 150m for Sree Puram, Tirunelveli)
+    const allowedRadiusMeters = settings.radiusMeters || 150;
+    const isInside = distanceMeters <= allowedRadiusMeters;
 
     if (!isInside) {
       return res.status(403).json({
         success: false,
         code: 'GEOFENCE_VIOLATION',
-        message: `You are outside the SS40 Network office premises (${Math.round(distanceMeters)}m away; allowed: ${settings.radiusMeters}m). Attendance access is blocked.`,
+        status: 'Absent',
+        message: 'You are not in the range',
         employee: {
           id: employee.id,
           name: employee.name,
@@ -445,7 +447,7 @@ app.post('/api/attendance/punch', async (req, res) => {
           officeName: settings.companyName,
           officeAddress: settings.address,
           distanceMeters: distanceMeters,
-          allowedRadiusMeters: settings.radiusMeters,
+          allowedRadiusMeters: allowedRadiusMeters,
           userCoords: { lat: userLat, lng: userLng, accuracy: userAccuracy },
           officeCoords: { lat: settings.officeLat, lng: settings.officeLng }
         }
@@ -472,10 +474,11 @@ app.post('/api/attendance/punch', async (req, res) => {
     if (!todayRecord) {
       // ---------------------------------------------------------
       // ACTION: CHECK-IN (PUNCH IN)
+      // User is INSIDE geofence: attendance marked as Present
       // ---------------------------------------------------------
-      let status = 'ON_TIME';
+      let status = 'Present';
       if (currentMinutesFromMidnight <= shiftStartMinutes) {
-        status = 'ON_TIME';
+        status = 'Present';
       } else if (currentMinutesFromMidnight <= shiftStartMinutes + graceWindowMinutes) {
         status = 'GRACE_PERIOD';
       } else {
@@ -683,7 +686,7 @@ app.get('/api/attendance/today', async (req, res) => {
     const onLunch = currentlyClockedIn.filter(a => a.status === 'ON_LUNCH');
     const loggedIn = currentlyClockedIn.filter(a => a.status !== 'ON_BREAK' && a.status !== 'ON_LUNCH' && !(a.breakStart && !a.breakEnd));
 
-    const onTimeCount = todayRecords.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME').length;
+    const onTimeCount = todayRecords.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME' || a.status === 'Present' || a.status === 'PRESENT').length;
     const graceCount = todayRecords.filter(a => a.status === 'GRACE_PERIOD').length;
     const lateCount = todayRecords.filter(a => a.status === 'LATE').length;
 
@@ -739,14 +742,14 @@ app.get('/api/attendance/stats', async (req, res) => {
         };
       }
       dateMap[rec.date].count++;
-      if (rec.status === 'ON_TIME' || rec.status === 'OVERTIME') dateMap[rec.date].onTime++;
+      if (rec.status === 'ON_TIME' || rec.status === 'OVERTIME' || rec.status === 'Present' || rec.status === 'PRESENT') dateMap[rec.date].onTime++;
       if (rec.status === 'GRACE_PERIOD') dateMap[rec.date].grace++;
       if (rec.status === 'LATE') dateMap[rec.date].late++;
       dateMap[rec.date].records.push(rec);
     });
 
     const totalLogs = attendance.length;
-    const onTimeLogs = attendance.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME').length;
+    const onTimeLogs = attendance.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME' || a.status === 'Present' || a.status === 'PRESENT').length;
     const graceLogs = attendance.filter(a => a.status === 'GRACE_PERIOD').length;
     const lateLogs = attendance.filter(a => a.status === 'LATE').length;
 
@@ -759,14 +762,14 @@ app.get('/api/attendance/stats', async (req, res) => {
 
       let streak = 0;
       for (const log of empLogs) {
-        if (log.status === 'ON_TIME' || log.status === 'OVERTIME' || log.status === 'GRACE_PERIOD') {
+        if (log.status === 'ON_TIME' || log.status === 'OVERTIME' || log.status === 'GRACE_PERIOD' || log.status === 'Present' || log.status === 'PRESENT') {
           streak++;
         } else {
           break;
         }
       }
 
-      const onTimeCount = empLogs.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME').length;
+      const onTimeCount = empLogs.filter(a => a.status === 'ON_TIME' || a.status === 'OVERTIME' || a.status === 'Present' || a.status === 'PRESENT').length;
       const graceCount = empLogs.filter(a => a.status === 'GRACE_PERIOD').length;
       const lateCount = empLogs.filter(a => a.status === 'LATE').length;
       const totalEmpLogs = empLogs.length;
