@@ -60,7 +60,7 @@ class BarcodeScannerEngine {
   // -----------------------------------------------------------------
   // 1. MOBILE CAMERA WEBRTC SCANNER
   // -----------------------------------------------------------------
-  async initCamera(containerId = 'camera-preview') {
+  async initCamera(containerId = 'camera-preview', autoStart = false) {
     if (typeof Html5Qrcode === 'undefined') {
       console.warn('Html5Qrcode library not loaded yet.');
       this.renderCameraState(containerId, 'Scanner library is loading. Please refresh.');
@@ -68,15 +68,16 @@ class BarcodeScannerEngine {
     }
 
     try {
-      if (!this.html5QrCode) {
-        this.html5QrCode = new Html5Qrcode(containerId, {
-          formatsToSupport: this.getSupportedFormatsList(),
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-          verbose: false
-        });
+      if (this.isCameraRunning) {
+        return true;
       }
 
-      if (this.isCameraRunning) {
+      if (!autoStart) {
+        this.isCameraRunning = false;
+        this.updateAimOverlay(false);
+        this.updateToggleButtonState(false);
+        this.updateHintText('Camera Scanner Paused. Click "Start Camera" to scan your ID card.', false);
+        this.renderCameraState(containerId, 'Camera is paused. Click "Start Camera" to scan your ID card.');
         return true;
       }
 

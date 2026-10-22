@@ -120,10 +120,27 @@
 
           <!-- Camera Viewport Container -->
           <div id="camera-viewport-wrap" class="camera-viewport-container">
-            <div id="camera-preview"></div>
+            <div id="camera-preview">
+              <div class="camera-idle-placeholder">
+                <div class="camera-idle-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                </div>
+                <div class="camera-idle-title">Camera Scanner</div>
+                <p class="camera-idle-subtitle">Camera is paused. Click &ldquo;Start Camera&rdquo; to scan your ID card.</p>
+                <div class="camera-idle-actions">
+                  <button id="activate-camera-btn" class="btn btn-primary">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Start Camera
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <!-- Aim Frame Overlay -->
-            <div class="scan-aim-overlay">
+            <div class="scan-aim-overlay" style="display: none;">
               <div class="aim-frame">
                 <div class="aim-corner aim-tl"></div>
                 <div class="aim-corner aim-tr"></div>
@@ -151,7 +168,7 @@
           <!-- Camera Live Helper & Tip Banner -->
           <div id="camera-scan-hint" class="camera-scan-hint">
             <span class="hint-dot"></span>
-            <span id="camera-hint-text">Scanner Active: Hold ID card 15&ndash;20cm from camera</span>
+            <span id="camera-hint-text">Camera Scanner Paused. Click &ldquo;Start Camera&rdquo; to scan your ID card.</span>
           </div>
 
           <!-- Terminal Footer: Status Indicator & Manual Fallback -->
@@ -235,10 +252,6 @@
               <div class="coords-row">
                 <span>Office Location:</span>
                 <span class="val" id="kiosk-office-name">Sree Puram, Tirunelveli</span>
-              </div>
-              <div class="coords-row">
-                <span>Coordinates:</span>
-                <span class="val" id="kiosk-office-coords">8.72851, 77.72744 (±150m)</span>
               </div>
               <div class="coords-row">
                 <span>Shift Schedule:</span>

@@ -107,7 +107,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Update Kiosk Sidebar Meter & Status Badge
     const kioskMeterVal = document.getElementById('kiosk-meter-dist');
     const kioskMeterBar = document.getElementById('kiosk-meter-bar');
-    const kioskOfficeTarget = document.getElementById('kiosk-office-coords');
     const geofenceStatusBadge = document.querySelector('.geofence-card-header .status-badge');
 
     if (kioskMeterVal) {
@@ -156,9 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    if (kioskOfficeTarget && state.office) {
-      kioskOfficeTarget.textContent = `${state.office.lat.toFixed(5)}, ${state.office.lng.toFixed(5)} (±${state.radius}m)`;
-    }
+
   });
 
   // Start GPS tracking
@@ -687,7 +684,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await window.barcodeScanner.stopCamera();
         window.apiService.showToast('Camera paused', 'info');
       } else {
-        await window.barcodeScanner.initCamera('camera-preview');
+        await window.barcodeScanner.startCamera('camera-preview');
       }
     });
   }
@@ -805,8 +802,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (headerBackBtn) headerBackBtn.style.display = 'none';
       if (headerAdminActions) headerAdminActions.style.display = 'none';
       if (headerBrandTagline) headerBrandTagline.textContent = 'Employee Attendance Portal';
-      // Resume camera
-      window.barcodeScanner.initCamera('camera-preview');
+      // Maintain idle camera state unless camera was already running
+      if (!window.barcodeScanner.isCameraRunning) {
+        window.barcodeScanner.initCamera('camera-preview', false);
+      }
     } else {
       if (!adminAuthenticated) {
         openAdminLoginModal();
@@ -1880,7 +1879,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadQuickTestShelf();
   await loadTodayLiveOverview();
-  await window.barcodeScanner.initCamera('camera-preview');
+  await window.barcodeScanner.initCamera('camera-preview', false);
 
   console.log('SS40 Network Smart Attendance System initialized successfully.');
 });

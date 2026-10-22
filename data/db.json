@@ -253,6 +253,34 @@
   ],
   "attendance": [
     {
+      "id": "ATT-20261022-5347",
+      "employeeId": "SS40-EMP-1001",
+      "employeeName": "Selvakumar S.",
+      "department": "SS40 Digital Solutions",
+      "designation": "Principal Solutions Architect",
+      "date": "2026-10-22",
+      "checkIn": "2026-10-22T14:49:45.332Z",
+      "checkInTime": "08:19 PM",
+      "checkOut": null,
+      "checkOutTime": null,
+      "breakStart": null,
+      "breakStartTime": null,
+      "breakEnd": null,
+      "breakEndTime": null,
+      "breakMinutes": 0,
+      "hoursWorked": null,
+      "status": "LATE",
+      "method": "CAMERA_BARCODE",
+      "location": {
+        "lat": 12.940430744362,
+        "lng": 78.88572189940314,
+        "distanceMeters": 0,
+        "accuracy": 129,
+        "isInside": true,
+        "address": "1st Floor, Municipal Corporation Incubation Centre, Sree Puram, Tirunelveli"
+      }
+    },
+    {
       "id": "ATT-20261016-6679",
       "employeeId": "SS40-EMP-9250",
       "employeeName": "karu",
